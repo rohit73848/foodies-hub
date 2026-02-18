@@ -1,4 +1,4 @@
-// script.js - Final Version (All Features)
+// script.js - Final Version 0.3 (Details + Responsive)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
@@ -12,56 +12,35 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let allFoodsData = []; 
-let currentFoodItem = {}; 
-let myOrderIds = []; 
+let allFoodsData = [];
+let cart = [];
+let myOrderIds = [];
+let isSingleOrder = false;
+let singleItemData = {};
 
-window.onload = function() {
+window.onload = function () {
     showFoodMenu();
-    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    if (localStorage.getItem('myCart')) {
+        cart = JSON.parse(localStorage.getItem('myCart'));
+        updateCartUI();
+    }
     validateAndFetchOrders();
 };
 
-// --- Theme Logic (New) ---
 function toggleTheme() {
     document.body.classList.toggle('light-mode');
-    if(document.body.classList.contains('light-mode')) {
-        localStorage.setItem('theme', 'light');
-    } else {
-        localStorage.setItem('theme', 'dark');
-    }
+    localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
 }
 
-function validateAndFetchOrders() {
-    if(!sessionStorage.getItem('myOrderIds')) {
-        document.getElementById('my-orders-count').innerText = 0;
-        return;
-    }
-    let storedIds = JSON.parse(sessionStorage.getItem('myOrderIds'));
-    let validIds = [];
-    let count = 0;
-    let promises = storedIds.map(id => db.collection("orders").doc(id).get());
-    
-    Promise.all(promises).then((docs) => {
-        docs.forEach(doc => {
-            if(doc.exists) {
-                validIds.push(doc.id);
-                count++;
-            }
-        });
-        myOrderIds = validIds;
-        sessionStorage.setItem('myOrderIds', JSON.stringify(myOrderIds));
-        document.getElementById('my-orders-count').innerText = count;
-    });
-}
-
+// ---- MENU ----
 function showFoodMenu() {
     const container = document.getElementById('menu-container');
     container.innerHTML = '<p>Loading...</p>';
-    db.collection("menu_items").onSnapshot((snapshot) => {
+    db.collection("menu_items").onSnapshot(snap => {
         allFoodsData = [];
         container.innerHTML = '';
-        snapshot.forEach(doc => allFoodsData.push({ id: doc.id, ...doc.data() }));
+        snap.forEach(doc => allFoodsData.push({ id: doc.id, ...doc.data() }));
         renderMenu('all');
     });
 }
@@ -70,126 +49,140 @@ function renderMenu(category) {
     const container = document.getElementById('menu-container');
     container.innerHTML = '';
     const filtered = category === 'all' ? allFoodsData : allFoodsData.filter(f => f.category === category);
-    
+
     filtered.forEach(food => {
-        let btn = food.available 
-            ? `<button class="order-btn" onclick="openOrderModal('${food.name}', '${food.price}')">Order Now</button>`
-            : `<button class="order-btn" style="background:gray;" disabled>Out of Stock</button>`;
-        
         const img = food.image || 'https://via.placeholder.com/300';
+        const desc = food.description ? food.description.replace(/'/g, "\\'") : "Delicious food!";
+
+        let btnHTML = food.available
+            ? `<div class="action-buttons">
+                <button class="btn btn-buy" onclick="buyNow('${food.name}', ${food.price})">Buy</button>
+                <button class="btn btn-cart" onclick="addToCart('${food.name}', ${food.price})">Cart</button>
+               </div>`
+            : `<button class="btn" style="background:#555; width:100%; margin-top:10px;" disabled>Out of Stock</button>`;
+
         container.innerHTML += `
             <div class="food-card">
-                <img src="${img}">
+                <div class="info-btn" onclick="showDetails('${food.name}', '${food.price}', '${img}', '${desc}')">ℹ️</div>
+                <img src="${img}" onclick="showDetails('${food.name}', '${food.price}', '${img}', '${desc}')">
                 <div class="card-body">
                     <span class="food-name">${food.name}</span>
                     <span class="food-price">${food.price} Rs</span>
-                    ${btn}
+                    ${btnHTML}
                 </div>
             </div>`;
     });
 }
-
-function filterFood(cat) { 
-    // Button Active Logic
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    const buttons = Array.from(document.querySelectorAll('.filter-btn'));
-    const target = buttons.find(b => b.innerText.toLowerCase().includes(cat) || (cat==='all' && b.innerText==='All'));
-    if(target) target.classList.add('active');
-    
-    renderMenu(cat); 
+function filterFood(cat) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event?.target.classList.add('active');
+    renderMenu(cat);
 }
 
-function openOrderModal(name, price) {
-    currentFoodItem = { name, price };
-    document.getElementById('selectedFoodName').innerText = `Item: ${name} (${price} Rs)`;
-    document.getElementById('orderModal').style.display = 'block';
+// ---- DETAILS MODAL (NEW) ----
+function showDetails(name, price, img, desc) {
+    document.getElementById('detail-img').src = img;
+    document.getElementById('detail-name').innerText = name;
+    document.getElementById('detail-price').innerText = price + " Rs";
+    document.getElementById('detail-desc').innerText = desc;
+    document.getElementById('foodDetailsModal').style.display = 'block';
 }
+function closeDetailsModal() { document.getElementById('foodDetailsModal').style.display = 'none'; }
 
+// ---- CART & ORDER ----
+function addToCart(name, price) {
+    cart.push({ name, price });
+    updateCartUI();
+    // Toast effect
+    const btn = event.target;
+    const oldText = btn.innerText;
+    btn.innerText = "✔";
+    setTimeout(() => btn.innerText = oldText, 1000);
+}
+function updateCartUI() {
+    document.getElementById('cart-count').innerText = cart.length;
+    localStorage.setItem('myCart', JSON.stringify(cart));
+}
+function buyNow(name, price) {
+    isSingleOrder = true;
+    singleItemData = { name, price };
+    document.getElementById('checkoutModal').style.display = 'block';
+}
+function proceedToCheckout() {
+    if (cart.length === 0) return alert("Empty Cart!");
+    isSingleOrder = false;
+    closeCartModal();
+    document.getElementById('checkoutModal').style.display = 'block';
+}
 function confirmOrder() {
     const name = document.getElementById('cusName').value;
     const phone = document.getElementById('cusPhone').value;
     const address = document.getElementById('cusAddress').value;
+    if (!name || !phone) return alert("Need Name & Phone!");
 
-    if(!name || !phone) return alert("Name & Phone required!");
+    let finalName = isSingleOrder ? singleItemData.name : cart.map(i => i.name).join(", ") + ` (${cart.length})`;
+    let finalPrice = isSingleOrder ? singleItemData.price : cart.reduce((a, b) => a + parseInt(b.price), 0);
 
     db.collection("orders").add({
         customerName: name, phone, address,
-        foodName: currentFoodItem.name,
-        price: currentFoodItem.price,
-        status: "Pending",
-        cancelledBy: null, 
+        foodName: finalName, price: finalPrice,
+        status: "Pending", cancelledBy: null,
         orderTime: firebase.firestore.FieldValue.serverTimestamp()
     }).then((doc) => {
-        alert("Order Success! ✅");
+        alert("Order Placed! 🚀");
+        if (!isSingleOrder) { cart = []; updateCartUI(); }
         myOrderIds.push(doc.id);
         sessionStorage.setItem('myOrderIds', JSON.stringify(myOrderIds));
-        validateAndFetchOrders(); 
-        closeModal();
+        closeCheckoutModal();
+        openMyOrders();
     });
 }
 
-function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+// ---- MODAL HELPERS ----
+function openCartModal() {
+    document.getElementById('cartModal').style.display = 'block';
+    const box = document.getElementById('cart-items-container');
+    const tot = document.getElementById('cart-total-price');
+    box.innerHTML = ''; let t = 0;
+    if (cart.length === 0) { box.innerHTML = '<p>Empty</p>'; tot.innerText = '0'; return; }
+    cart.forEach((i, idx) => {
+        t += parseInt(i.price);
+        box.innerHTML += `<div class="cart-item"><span>${i.name}</span> <button class="remove-btn" onclick="remCart(${idx})">✖</button></div>`;
+    });
+    tot.innerText = t;
+}
+function remCart(idx) { cart.splice(idx, 1); updateCartUI(); openCartModal(); }
+function closeCartModal() { document.getElementById('cartModal').style.display = 'none'; }
+function closeCheckoutModal() { document.getElementById('checkoutModal').style.display = 'none'; }
 
+// ---- HISTORY ----
+function validateAndFetchOrders() {
+    if (!sessionStorage.getItem('myOrderIds')) return;
+    myOrderIds = JSON.parse(sessionStorage.getItem('myOrderIds'));
+}
 function openMyOrders() {
     document.getElementById('myOrdersModal').style.display = 'block';
-    const pendingList = document.getElementById('list-pending');
-    const acceptedList = document.getElementById('list-accepted');
-    const cancelledList = document.getElementById('list-cancelled');
-    
-    pendingList.innerHTML = acceptedList.innerHTML = cancelledList.innerHTML = '<p style="font-size:12px; color:gray;">Loading...</p>';
-
-    let promises = myOrderIds.map(id => db.collection("orders").doc(id).get());
-    Promise.all(promises).then((docs) => {
-        pendingList.innerHTML = acceptedList.innerHTML = cancelledList.innerHTML = '';
-        let pCount=0, aCount=0, cCount=0;
-
+    const box = document.getElementById('order-history-list');
+    box.innerHTML = '<p>Loading...</p>';
+    Promise.all(myOrderIds.map(id => db.collection("orders").doc(id).get())).then(docs => {
+        box.innerHTML = '';
         docs.forEach(doc => {
-            if(doc.exists) {
-                const data = doc.data();
-                const date = data.orderTime ? new Date(data.orderTime.toDate()).toLocaleString() : 'Just now';
-                let itemHTML = `
-                    <div class="order-item">
-                        <strong>${data.foodName}</strong> (${data.price} Rs)<br>
-                        <span class="order-time">📅 ${date}</span>
-                `;
-
-                if(data.status === 'Pending') {
-                    pCount++;
-                    itemHTML += `<button onclick="cancelOrder('${doc.id}')" style="background:red; color:white; border:none; padding:5px; border-radius:5px; margin-top:5px; cursor:pointer;">Cancel ❌</button></div>`;
-                    pendingList.innerHTML += itemHTML;
-                } else if(data.status === 'Accepted') {
-                    aCount++;
-                    itemHTML += `<span style="color:#2ed573; font-size:12px;">Being prepared... 🍳</span></div>`;
-                    acceptedList.innerHTML += itemHTML;
-                } else if(data.status === 'Cancelled') {
-                    cCount++;
-                    let reason = data.cancelledBy === 'admin' ? "❌ Cancelled by Restaurant" : "🗑️ Cancelled by You";
-                    itemHTML += `<span class="cancel-info">${reason}</span></div>`;
-                    cancelledList.innerHTML += itemHTML;
-                }
+            if (doc.exists) {
+                const d = doc.data();
+                const st = d.status;
+                const col = st === 'Accepted' ? '#2ed573' : (st === 'Cancelled' ? '#ff4757' : 'orange');
+                let html = `<div class="order-item"><div><b>${d.foodName}</b><br><span style="color:${col}">${st}</span></div>`;
+                if (st === 'Pending') html += `<button onclick="canOrd('${doc.id}')" style="color:red;border:none;background:none;">Cancel</button>`;
+                box.innerHTML += html + '</div>';
             }
         });
-        document.getElementById('count-pending').innerText = pCount;
-        document.getElementById('count-accepted').innerText = aCount;
-        document.getElementById('count-cancelled').innerText = cCount;
     });
 }
-
-function cancelOrder(id) {
-    if(confirm("Cancel this order?")) {
-        db.collection("orders").doc(id).update({
-            status: "Cancelled",
-            cancelledBy: "customer"
-        }).then(() => {
-            alert("Order Cancelled.");
-            openMyOrders(); 
-            validateAndFetchOrders(); 
-        });
-    }
+function canOrd(id) {
+    if (confirm("Cancel?")) db.collection("orders").doc(id).update({ status: "Cancelled", cancelledBy: "customer" }).then(() => { alert("Done"); openMyOrders(); });
 }
-
 function closeMyOrders() { document.getElementById('myOrdersModal').style.display = 'none'; }
-window.onclick = function(e) {
-    if(e.target == document.getElementById('orderModal')) closeModal();
-    if(e.target == document.getElementById('myOrdersModal')) closeMyOrders();
+
+window.onclick = function (e) {
+    if (e.target.className === 'modal') e.target.style.display = "none";
 }

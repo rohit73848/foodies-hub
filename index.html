@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foodies Hub - Order Now</title>
+    <title>Foodies Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -14,16 +14,13 @@
     <header>
         <h1>Foodies Hub 🍔</h1>
         <div class="header-buttons">
-            <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
-            <button class="theme-btn" onclick="openMyOrders()">
-                📦 My Orders (<span id="my-orders-count">0</span>)
-            </button>
+            <button class="theme-btn" onclick="toggleTheme()">🌓</button>
+            <button class="theme-btn" onclick="openMyOrders()">📦</button>
+            <button class="cart-btn" onclick="openCartModal()">🛒 <span id="cart-count">0</span></button>
         </div>
     </header>
 
     <div class="container">
-        <h2 class="section-title">Our Delicious Menu</h2>
-
         <div class="filter-container">
             <button class="filter-btn active" onclick="filterFood('all')">All</button>
             <button class="filter-btn" onclick="filterFood('veg')">Veg 🌱</button>
@@ -34,41 +31,47 @@
         <div class="menu-grid" id="menu-container"></div>
     </div>
 
-    <div id="orderModal" class="modal">
+    <div id="cartModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h2>Place Your Order 📦</h2>
-            <p id="selectedFoodName" style="color: #ff4757; font-weight: bold; margin-bottom: 10px;"></p>
+            <span class="close-btn" onclick="closeCartModal()">&times;</span>
+            <h2>Cart 🛒</h2>
+            <div id="cart-items-container"></div>
+            <div class="cart-total">Total: <span id="cart-total-price">0</span> Rs</div>
+            <button class="checkout-btn" onclick="proceedToCheckout()">Checkout 🚀</button>
+        </div>
+    </div>
+
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCheckoutModal()">&times;</span>
+            <h2>Details 📝</h2>
             <input type="text" id="cusName" placeholder="Your Name">
             <input type="tel" id="cusPhone" placeholder="Phone Number">
-            <textarea id="cusAddress" rows="3" placeholder="Address"></textarea>
-            <button class="order-btn" style="width:100%; margin-top:10px;" onclick="confirmOrder()">Confirm Order ✅</button>
+            <textarea id="cusAddress" rows="2" placeholder="Address"></textarea>
+            <button class="checkout-btn" onclick="confirmOrder()">Confirm Order ✅</button>
         </div>
     </div>
 
     <div id="myOrdersModal" class="modal">
-        <div class="modal-content" style="max-width: 500px; text-align: left;">
+        <div class="modal-content">
             <span class="close-btn" onclick="closeMyOrders()">&times;</span>
-            <h2 style="text-align: center; margin-bottom: 15px;">Order History 🕒</h2>
-            <div class="order-sections">
-                <div class="order-group">
-                    <h3 style="color: orange; border-bottom: 2px solid orange;">⏳ Pending (<span id="count-pending">0</span>)</h3>
-                    <div id="list-pending" class="order-list-box"></div>
-                </div>
-                <div class="order-group">
-                    <h3 style="color: #2ed573; border-bottom: 2px solid #2ed573;">🍳 Cooking / Accepted (<span id="count-accepted">0</span>)</h3>
-                    <div id="list-accepted" class="order-list-box"></div>
-                </div>
-                <div class="order-group">
-                    <h3 style="color: #ff4757; border-bottom: 2px solid #ff4757;">❌ Cancelled (<span id="count-cancelled">0</span>)</h3>
-                    <div id="list-cancelled" class="order-list-box"></div>
-                </div>
-            </div>
+            <h2>History 🕒</h2>
+            <div id="order-history-list"></div>
         </div>
     </div>
 
-    <a href="https://wa.me/91YOUR_NUMBER" class="whatsapp-btn" target="_blank">💬 Chat</a>
+    <div id="foodDetailsModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" onclick="closeDetailsModal()">&times;</span>
+            <img id="detail-img" src="" style="width:100%; height:200px; object-fit:cover; border-radius:10px;">
+            <h2 id="detail-name" style="margin-top:10px; color:#ff4757;"></h2>
+            <h3 id="detail-price" style="margin:5px 0;"></h3>
+            <p id="detail-desc" style="color:var(--text-color); opacity:0.8; margin:15px 0; font-size:14px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"></p>
+            <button class="checkout-btn" onclick="closeDetailsModal()">Close</button>
+        </div>
+    </div>
 
+    <a href="https://wa.me/91YOUR_NUMBER" class="whatsapp-btn">💬 Chat</a>
     <script src="script.js"></script>
 </body>
 </html>
