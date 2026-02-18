@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodies Hub - Order Now</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Foodies Hub 🍔</h1>
+        <div class="header-buttons">
+            <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+            <div class="cart-btn" onclick="alert('You have placed ' + orderCount + ' orders in this session!')">
+                Cart (<span id="cart-count">0</span>)
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="section-title">Our Delicious Menu</h2>
+
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterFood('all')">All</button>
+            <button class="filter-btn" onclick="filterFood('veg')">Veg 🌱</button>
+            <button class="filter-btn" onclick="filterFood('non-veg')">Non-Veg 🍗</button>
+            <button class="filter-btn" onclick="filterFood('special')">Special ⭐</button>
+        </div>
+        
+        <div class="menu-grid" id="menu-container">
+            </div>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Place Your Order 📦</h2>
+            
+            <p id="selectedFoodName" style="color: #ff4757; font-weight: bold; margin-bottom: 10px;"></p>
+            
+            <input type="text" id="cusName" placeholder="Your Name (আপনার নাম)">
+            <input type="tel" id="cusPhone" placeholder="Phone Number (ফোন নম্বর)">
+            <textarea id="cusAddress" rows="3" placeholder="Full Address (ঠিকানা)"></textarea>
+            
+            <button class="order-btn" style="width:100%; margin-top:10px;" onclick="confirmOrder()">Confirm Order ✅</button>
+        </div>
+    </div>
+
+    <a href="https://wa.me/917384887602?text=Hello%20Foodies%20Hub!%20I%20want%20to%20know%20more." class="whatsapp-btn" target="_blank">
+    💬 Chat with Us
+</a>
+
+    <script src="script.js"></script>
+</body>
+</html>

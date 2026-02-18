@@ -1,0 +1,350 @@
+/* ---- style.css (Final Fixed Version) ---- */
+
+:root {
+    /* ডিফল্ট (Dark Mode Theme) */
+    --bg-color: #161623;
+    --text-color: #fff;
+    --card-bg: rgba(255, 255, 255, 0.1);
+    --primary-color: #ff4757;
+    --glow-color: #ff4757;
+    --border-color: rgba(255, 255, 255, 0.2);
+    --modal-bg: #1e1e2f;
+    --input-bg: rgba(255, 255, 255, 0.1);
+    --option-bg: #1e1e2f; /* ড্রপডাউনের জন্য আলাদা ব্যাকগ্রাউন্ড */
+}
+
+/* Light Mode Variables */
+body.light-mode {
+    --bg-color: #f0f2f5;
+    --text-color: #333;
+    --card-bg: #ffffff;
+    --primary-color: #ff4757;
+    --glow-color: #ff6b81;
+    --border-color: #ddd;
+    --modal-bg: #ffffff;
+    --input-bg: #f9f9f9;
+    --option-bg: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+body {
+    background-color: var(--bg-color);
+    background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1974&auto=format&fit=crop');
+    background-size: cover;
+    background-attachment: fixed;
+    background-blend-mode: overlay;
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+/* ---- Header ---- */
+header {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border-color);
+}
+
+header h1 {
+    font-size: 24px;
+    color: #ff4757;
+    text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+}
+
+.header-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.theme-btn, .cart-btn {
+    background: var(--card-bg);
+    color: var(--text-color);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid var(--primary-color);
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 0 5px var(--primary-color);
+    transition: 0.3s;
+}
+
+.theme-btn:hover, .cart-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+/* ---- Container & Filter ---- */
+.container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 15px;
+    text-align: center;
+}
+
+h2.section-title {
+    margin-bottom: 30px;
+    font-size: 2rem;
+    color: var(--text-color);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.filter-container {
+    margin-bottom: 30px;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    margin: 5px;
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: 30px;
+    font-weight: 600;
+    transition: 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+/* 🔥 Fix 1: Active ছাড়া অন্য বাটনে মাউস নিলে আলাদা ইফেক্ট হবে */
+.filter-btn:not(.active):hover {
+    box-shadow: 0 0 10px var(--glow-color);
+    border-color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Active Button Style (Selected) */
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 20px var(--glow-color);
+    border-color: var(--primary-color);
+    transform: scale(1.05); /* একটু বড় দেখাবে */
+}
+
+/* ---- Food Card ---- */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.food-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: 0.4s ease;
+    max-width: 350px;
+    margin: 0 auto;
+    width: 100%;
+    color: var(--text-color);
+}
+
+.food-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+    border-color: var(--primary-color);
+}
+
+.food-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.food-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.food-price {
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.order-btn {
+    background: linear-gradient(45deg, #ff4757, #ff6b81);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    transition: 0.3s;
+}
+
+.order-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--glow-color);
+}
+
+.out-of-stock {
+    background: #555;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* ---- Modal & Input Design ---- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: var(--modal-bg);
+    color: var(--text-color);
+    margin: 10% auto;
+    padding: 25px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
+}
+
+/* ইনপুট এবং সিলেক্ট ডিজাইন */
+.modal-content input, 
+.modal-content textarea, 
+.modal-content select, 
+.admin-form input, 
+.admin-form select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg); /* ভেরিয়েবল ব্যবহার */
+    color: var(--text-color);
+    outline: none;
+}
+
+.modal-content input::placeholder, 
+.admin-form input::placeholder { 
+    color: #aaa; 
+}
+
+/* 🔥 Fix 2: Dropdown Option Visibility Problem Solved */
+option {
+    background-color: var(--option-bg); /* ডার্ক মোডে কালো, লাইট মোডে সাদা */
+    color: var(--text-color);
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--text-color);
+}
+.close-btn:hover { color: var(--primary-color); }
+
+/* ---- Admin Specific Styles ---- */
+.admin-form {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    backdrop-filter: blur(10px);
+}
+
+/* Responsive Table */
+.table-container {
+    overflow-x: auto;
+}
+
+.food-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+    color: var(--text-color);
+    min-width: 600px;
+}
+
+.food-table th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px;
+}
+
+.food-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .header-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* ---- WhatsApp Button ---- */
+.whatsapp-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25d366; /* WhatsApp Green */
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: transform 0.3s;
+    border: 2px solid white;
+}
+
+.whatsapp-btn:hover {
+    transform: scale(1.1);
+    background-color: #128c7e;
+}

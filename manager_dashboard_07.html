@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Manager - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+ 
+    <header>
+        <h1>Manager Panel 👨‍🍳</h1>
+        <div class="header-buttons">
+            <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+            <a href="index.html" class="cart-btn" style="text-decoration: none;">View Website</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div class="admin-form">
+            <h2>Add New Food Item</h2>
+            <input type="text" id="foodName" placeholder="Food Name (e.g. Kosha Mangsho)">
+            <input type="number" id="foodPrice" placeholder="Price (e.g. 250)">
+            <input type="text" id="foodImage" placeholder="Image URL">
+            
+            <select id="foodCategory">
+                <option value="all">Select Category</option>
+                <option value="veg">Veg (নিরামিষ)</option>
+                <option value="non-veg">Non-Veg (আমিষ)</option>
+                <option value="special">Special (স্পেশাল)</option>
+            </select>
+
+            <button class="order-btn" style="width:100%" onclick="addNewFood()">Add Item</button>
+        </div>
+
+        <div class="order-section">
+            <h2 style="color: #2ed573;">🔔 Incoming Orders</h2>
+            <div class="table-container">
+                <table class="food-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Order Details</th>
+                            <th>Address</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-order-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <hr style="margin: 40px 0; border-top: 1px dashed var(--border-color);">
+
+        <h2>Food List & Stock Control</h2>
+        <div class="table-container">
+            <table class="food-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-food-list"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
