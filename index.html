@@ -6,7 +6,6 @@
     <title>Foodies Hub - Order Now</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
@@ -16,9 +15,9 @@
         <h1>Foodies Hub 🍔</h1>
         <div class="header-buttons">
             <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
-            <div class="cart-btn" onclick="alert('You have placed ' + orderCount + ' orders in this session!')">
-                Cart (<span id="cart-count">0</span>)
-            </div>
+            <button class="theme-btn" onclick="openMyOrders()">
+                📦 My Orders (<span id="my-orders-count">0</span>)
+            </button>
         </div>
     </header>
 
@@ -32,28 +31,43 @@
             <button class="filter-btn" onclick="filterFood('special')">Special ⭐</button>
         </div>
         
-        <div class="menu-grid" id="menu-container">
-            </div>
+        <div class="menu-grid" id="menu-container"></div>
     </div>
 
     <div id="orderModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h2>Place Your Order 📦</h2>
-            
             <p id="selectedFoodName" style="color: #ff4757; font-weight: bold; margin-bottom: 10px;"></p>
-            
-            <input type="text" id="cusName" placeholder="Your Name (আপনার নাম)">
-            <input type="tel" id="cusPhone" placeholder="Phone Number (ফোন নম্বর)">
-            <textarea id="cusAddress" rows="3" placeholder="Full Address (ঠিকানা)"></textarea>
-            
+            <input type="text" id="cusName" placeholder="Your Name">
+            <input type="tel" id="cusPhone" placeholder="Phone Number">
+            <textarea id="cusAddress" rows="3" placeholder="Address"></textarea>
             <button class="order-btn" style="width:100%; margin-top:10px;" onclick="confirmOrder()">Confirm Order ✅</button>
         </div>
     </div>
 
-    <a href="https://wa.me/917384887602?text=Hello%20Foodies%20Hub!%20I%20want%20to%20know%20more." class="whatsapp-btn" target="_blank">
-    💬 Chat with Us
-</a>
+    <div id="myOrdersModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; text-align: left;">
+            <span class="close-btn" onclick="closeMyOrders()">&times;</span>
+            <h2 style="text-align: center; margin-bottom: 15px;">Order History 🕒</h2>
+            <div class="order-sections">
+                <div class="order-group">
+                    <h3 style="color: orange; border-bottom: 2px solid orange;">⏳ Pending (<span id="count-pending">0</span>)</h3>
+                    <div id="list-pending" class="order-list-box"></div>
+                </div>
+                <div class="order-group">
+                    <h3 style="color: #2ed573; border-bottom: 2px solid #2ed573;">🍳 Cooking / Accepted (<span id="count-accepted">0</span>)</h3>
+                    <div id="list-accepted" class="order-list-box"></div>
+                </div>
+                <div class="order-group">
+                    <h3 style="color: #ff4757; border-bottom: 2px solid #ff4757;">❌ Cancelled (<span id="count-cancelled">0</span>)</h3>
+                    <div id="list-cancelled" class="order-list-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://wa.me/91YOUR_NUMBER" class="whatsapp-btn" target="_blank">💬 Chat</a>
 
     <script src="script.js"></script>
 </body>

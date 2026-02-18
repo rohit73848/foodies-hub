@@ -1,3 +1,5 @@
+// admin.js - Complete Version (Stock Control + Orders + Theme)
+
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
     authDomain: "foodieshub-8c673.firebaseapp.com",
@@ -10,15 +12,17 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// থিম সেটআপ
+// পেজ লোড হলে যা যা হবে
 window.onload = function() {
+    // থিম চেক
     if(localStorage.getItem('theme') === 'light') {
         document.body.classList.add('light-mode');
     }
-    renderFoodTable();
-    renderOrders();
+    renderOrders();     // অর্ডার লোড হবে
+    renderFoodTable();  // ফুড লিস্ট লোড হবে (এটা আগেরবার মিসিং ছিল)
 };
 
+// --- Theme Logic ---
 function toggleTheme() {
     document.body.classList.toggle('light-mode');
     if(document.body.classList.contains('light-mode')) {
@@ -28,11 +32,68 @@ function toggleTheme() {
     }
 }
 
-// টেবিল রেন্ডার
+// --- 1. Order Management ---
+function renderOrders() {
+    const orderTable = document.getElementById('admin-order-list');
+    db.collection("orders").orderBy("orderTime", "desc").onSnapshot((snapshot) => {
+        orderTable.innerHTML = '';
+        if(snapshot.empty) { 
+            orderTable.innerHTML = '<tr><td colspan="5" style="text-align:center">No Orders</td></tr>'; 
+            return; 
+        }
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const date = data.orderTime ? new Date(data.orderTime.toDate()).toLocaleString() : '';
+            
+            let color = 'orange';
+            if(data.status === 'Accepted') color = 'green';
+            if(data.status === 'Cancelled') color = 'red';
+
+            const row = `
+                <tr>
+                    <td>
+                        <strong>${data.customerName}</strong><br>
+                        <small>${data.phone}</small>
+                    </td>
+                    <td>
+                        ${data.foodName} (${data.price} Rs)<br>
+                        <small style="color:var(--text-color); opacity:0.7;">${date}</small>
+                    </td>
+                    <td><small>${data.address}</small></td>
+                    <td><span style="color:${color}; font-weight:bold;">${data.status}</span></td>
+                    <td>
+                        ${data.status === 'Pending' ? `
+                            <button onclick="updateStatus('${doc.id}', 'Accepted')" style="background:#2ed573; color:white; border:none; padding:5px; border-radius:5px; cursor:pointer;">✔ Accept</button>
+                            <button onclick="updateStatus('${doc.id}', 'Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px; border-radius:5px; cursor:pointer;">✖ Cancel</button>
+                        ` : ''}
+                        <button onclick="deleteOrder('${doc.id}')" style="background:#555; border:none; padding:5px; border-radius:5px; cursor:pointer;">🗑️</button>
+                    </td>
+                </tr>`;
+            orderTable.innerHTML += row;
+        });
+    });
+}
+
+function updateStatus(id, status) {
+    let updateData = { status: status };
+    if(status === 'Cancelled') {
+        updateData.cancelledBy = 'admin';
+    }
+    db.collection("orders").doc(id).update(updateData);
+}
+
+function deleteOrder(id) {
+    if(confirm("Delete permanently?")) db.collection("orders").doc(id).delete();
+}
+
+// --- 2. Food List & Stock Control (Restored) ---
 function renderFoodTable() {
     const tableBody = document.getElementById('admin-food-list');
-    db.collection("menu_items").onSnapshot((querySnapshot) => {
+    
+    db.collection("menu_items").orderBy("createdAt", "desc").onSnapshot((querySnapshot) => {
         tableBody.innerHTML = '';
+
         querySnapshot.forEach((doc) => {
             const food = doc.data();
             const id = doc.id;
@@ -48,7 +109,7 @@ function renderFoodTable() {
                     <td>
                         <button class="stock-btn ${statusClass}" onclick="toggleStock('${id}', ${food.available})">${statusText}</button>
                     </td>
-                    <td><button onclick="deleteFood('${id}')" style="color:red; border:none; background:none; cursor:pointer;">❌</button></td>
+                    <td><button onclick="deleteFood('${id}')" style="color:red; border:none; background:none; cursor:pointer; font-size:18px;">❌</button></td>
                 </tr>
             `;
             tableBody.innerHTML += row;
@@ -90,52 +151,5 @@ function toggleStock(id, currentStatus) {
 function deleteFood(id) {
     if(confirm("Delete item?")) {
         db.collection("menu_items").doc(id).delete();
-    }
-}
-
-// অর্ডার ম্যানেজমেন্ট
-function renderOrders() {
-    const orderTable = document.getElementById('admin-order-list');
-    db.collection("orders").orderBy("orderTime", "desc").onSnapshot((querySnapshot) => {
-        orderTable.innerHTML = '';
-        if (querySnapshot.empty) {
-            orderTable.innerHTML = '<tr><td colspan="5" style="text-align:center;">No Orders Yet.</td></tr>';
-            return;
-        }
-
-        querySnapshot.forEach((doc) => {
-            const order = doc.data();
-            const id = doc.id;
-            let statusColor = 'orange';
-            if (order.status === 'Accepted') statusColor = 'green';
-            if (order.status === 'Cancelled') statusColor = 'red';
-
-            const row = `
-                <tr>
-                    <td><strong>${order.customerName}</strong><br><small>📞 ${order.phone}</small></td>
-                    <td>${order.foodName}<br><span style="color:var(--primary-color); font-weight:bold;">${order.price} Rs</span></td>
-                    <td><small>${order.address}</small></td>
-                    <td><span style="color:${statusColor}; font-weight:bold;">${order.status}</span></td>
-                    <td>
-                        ${order.status === 'Pending' ? `
-                            <button onclick="updateOrderStatus('${id}', 'Accepted')" style="background:#2ed573; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:5px;">✔</button>
-                            <button onclick="updateOrderStatus('${id}', 'Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:5px;">✖</button>
-                        ` : ''}
-                        <button onclick="deleteOrder('${id}')" style="margin-left:5px; background:#555; color:white; border:none; cursor:pointer; padding:5px; border-radius:5px;">🗑️</button>
-                    </td>
-                </tr>
-            `;
-            orderTable.innerHTML += row;
-        });
-    });
-}
-
-function updateOrderStatus(id, newStatus) {
-    db.collection("orders").doc(id).update({ status: newStatus });
-}
-
-function deleteOrder(id) {
-    if(confirm("Delete order record?")) {
-        db.collection("orders").doc(id).delete();
     }
 }
