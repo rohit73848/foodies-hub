@@ -48,9 +48,12 @@
             <div class="admin-form">
                 <h2>Add New Item 🍔</h2>
                 <input type="text" id="foodName" placeholder="Food Name">
-                <input type="number" id="foodPrice" placeholder="Price">
+                <input type="number" id="foodPrice" placeholder="Price (Rs)">
                 <input type="text" id="foodImage" placeholder="Image URL">
-                <textarea id="foodDesc" rows="3" placeholder="Description (Ingredients etc.)"></textarea>
+                <textarea id="foodDesc" rows="2" placeholder="Description (Ingredients)"></textarea>
+                <input type="text" id="foodExtras" placeholder="Extras (e.g. Aloo=10, Egg=15)">
+                <small style="color: #aaa; display:block; margin-bottom:10px;">Format: Name=Price, Name=Price</small>
+
                 <select id="foodCategory">
                     <option value="all">Select Category</option>
                     <option value="veg">Veg 🌱</option>

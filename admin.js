@@ -1,4 +1,4 @@
-// admin.js - Version 0.4 (Tabbed Interface)
+// admin.js - Version 0.4 (With Extras Saving)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
@@ -12,8 +12,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-window.onload = function() {
-    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+window.onload = function () {
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
     renderOrders();
     renderFoodTable();
 };
@@ -23,37 +23,56 @@ function toggleTheme() {
     localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
 }
 
-// 🔥 TAB LOGIC (NEW)
 function showSection(sectionId) {
-    // 1. Hide all sections
     document.getElementById('sec-orders').style.display = 'none';
     document.getElementById('sec-add').style.display = 'none';
     document.getElementById('sec-stock').style.display = 'none';
-
-    // 2. Show active section
     document.getElementById('sec-' + sectionId).style.display = 'block';
 
-    // 3. Update Buttons Active State
     const buttons = document.querySelectorAll('.tab-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
-    
-    // Find clicked button based on text (Simple Logic)
-    if(sectionId === 'orders') buttons[0].classList.add('active');
-    if(sectionId === 'add') buttons[1].classList.add('active');
-    if(sectionId === 'stock') buttons[2].classList.add('active');
+    if (sectionId === 'orders') buttons[0].classList.add('active');
+    if (sectionId === 'add') buttons[1].classList.add('active');
+    if (sectionId === 'stock') buttons[2].classList.add('active');
 }
 
-// --- ORDER MANAGEMENT ---
+// --- ADD ITEM (UPDATED FOR EXTRAS) ---
+function addNewFood() {
+    const name = document.getElementById('foodName').value;
+    const price = document.getElementById('foodPrice').value;
+    const image = document.getElementById('foodImage').value;
+    const desc = document.getElementById('foodDesc').value;
+    // 👇 New
+    const extras = document.getElementById('foodExtras').value;
+    const category = document.getElementById('foodCategory').value;
+
+    if (!name || !price || category === 'all') return alert("Fill mandatory fields!");
+
+    db.collection("menu_items").add({
+        name: name, price: price, image: image, description: desc || "Tasty food!",
+        extras: extras || "", // এক্সট্রা সেভ করা হচ্ছে
+        category: category, available: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        alert("Item Added!");
+        // Clear inputs
+        document.getElementById('foodName').value = '';
+        document.getElementById('foodPrice').value = '';
+        document.getElementById('foodDesc').value = '';
+        document.getElementById('foodExtras').value = '';
+    });
+}
+
 function renderOrders() {
     const table = document.getElementById('admin-order-list');
     db.collection("orders").orderBy("orderTime", "desc").onSnapshot(snap => {
         table.innerHTML = '';
-        if(snap.empty) { table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No Pending Orders</td></tr>'; return; }
-        
+        if (snap.empty) { table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No Pending Orders</td></tr>'; return; }
+
         snap.forEach(doc => {
             const d = doc.data();
-            const color = d.status==='Accepted'?'green':(d.status==='Cancelled'?'red':'orange');
-            
+            const color = d.status === 'Accepted' ? 'green' : (d.status === 'Cancelled' ? 'red' : 'orange');
+
             table.innerHTML += `
                 <tr>
                     <td><b>${d.customerName}</b><br><small>${d.phone}</small><br><small>${d.address}</small></td>
@@ -72,35 +91,11 @@ function renderOrders() {
 
 function setStatus(id, st) {
     let data = { status: st };
-    if(st === 'Cancelled') data.cancelledBy = 'admin';
+    if (st === 'Cancelled') data.cancelledBy = 'admin';
     db.collection("orders").doc(id).update(data);
 }
-function delOrder(id) { if(confirm("Delete Order?")) db.collection("orders").doc(id).delete(); }
+function delOrder(id) { if (confirm("Delete Order?")) db.collection("orders").doc(id).delete(); }
 
-// --- ADD ITEM ---
-function addNewFood() {
-    const name = document.getElementById('foodName').value;
-    const price = document.getElementById('foodPrice').value;
-    const image = document.getElementById('foodImage').value;
-    const desc = document.getElementById('foodDesc').value;
-    const category = document.getElementById('foodCategory').value;
-
-    if(!name || !price || category === 'all') return alert("Fill mandatory fields!");
-
-    db.collection("menu_items").add({
-        name: name, price: price, image: image, description: desc || "Tasty food!",
-        category: category, available: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        alert("Item Added!");
-        // Clear inputs
-        document.getElementById('foodName').value = '';
-        document.getElementById('foodPrice').value = '';
-        document.getElementById('foodDesc').value = '';
-    });
-}
-
-// --- STOCK CONTROL ---
 function renderFoodTable() {
     const table = document.getElementById('admin-food-list');
     db.collection("menu_items").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -110,7 +105,7 @@ function renderFoodTable() {
             const cls = f.available ? 'in-stock' : 'out-stock';
             const txt = f.available ? 'In Stock' : 'Out';
             const img = f.image || 'https://via.placeholder.com/50';
-            
+
             table.innerHTML += `
                 <tr>
                     <td><img src="${img}" width="40" style="border-radius:5px;"></td>
@@ -121,5 +116,5 @@ function renderFoodTable() {
         });
     });
 }
-function togStock(id, s) { db.collection("menu_items").doc(id).update({available: !s}); }
-function delFood(id) { if(confirm("Delete Item?")) db.collection("menu_items").doc(id).delete(); }
+function togStock(id, s) { db.collection("menu_items").doc(id).update({ available: !s }); }
+function delFood(id) { if (confirm("Delete Item?")) db.collection("menu_items").doc(id).delete(); }

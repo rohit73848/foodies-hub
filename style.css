@@ -1,4 +1,4 @@
-/* ---- style.css (Final Fixed: No Scroll & Centered) ---- */
+/* ---- style.css (Version 0.4 - Search & Extras) ---- */
 
 :root {
     --bg-color: #161623;
@@ -24,7 +24,7 @@ body.light-mode {
     --option-bg: #ffffff;
 }
 
-/* 🔥 GLOBAL RESET & NO SCROLL FIX */
+/* Global Reset & Scroll Fix */
 * {
     margin: 0;
     padding: 0;
@@ -37,7 +37,6 @@ html,
 body {
     width: 100%;
     overflow-x: hidden;
-    /* ডানে-বামে স্ক্রল বন্ধ */
 }
 
 body {
@@ -51,7 +50,7 @@ body {
     padding-bottom: 70px;
 }
 
-/* ---- Header ---- */
+/* Header */
 header {
     background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(10px);
@@ -65,7 +64,6 @@ header {
     border-bottom: 1px solid var(--border-color);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     width: 100%;
-    /* ফিক্সড উইডথ */
 }
 
 header h1 {
@@ -104,7 +102,7 @@ header h1 {
     box-shadow: 0 0 10px var(--glow-color);
 }
 
-/* ---- Tab Navigation (Admin) ---- */
+/* Tab Navigation (Admin) */
 .tab-container {
     display: flex;
     justify-content: center;
@@ -113,7 +111,6 @@ header h1 {
     padding: 0 10px;
     max-width: 600px;
     flex-wrap: wrap;
-    /* বাটনগুলো জায়গা না পেলে নিচে নামবে */
 }
 
 .tab-btn {
@@ -127,7 +124,6 @@ header h1 {
     font-weight: bold;
     font-size: 14px;
     min-width: 80px;
-    /* মোবাইলে খুব ছোট হবে না */
 }
 
 .tab-btn.active {
@@ -137,17 +133,37 @@ header h1 {
     transform: scale(1.05);
 }
 
-/* ---- Customer Page Styling ---- */
+/* Customer Page Layout */
 .container {
     max-width: 1200px;
     margin: 20px auto;
     padding: 0 15px;
     text-align: center;
     width: 100%;
-    /* কন্টেইনার ফিক্স */
 }
 
-/* Filter Buttons Centered */
+/* 🔥 SEARCH BAR (New) */
+.search-container {
+    margin-bottom: 15px;
+}
+
+#search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 20px;
+    border-radius: 50px;
+    border: 1px solid var(--primary-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 16px;
+    text-align: center;
+}
+
+#search-input:focus {
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+/* Filter Buttons */
 .filter-container {
     display: flex;
     justify-content: center;
@@ -173,13 +189,12 @@ header h1 {
     transform: scale(1.05);
 }
 
-/* 🔥 GRID SYSTEM (Desktop & Mobile) */
+/* Grid System */
 .menu-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     justify-content: center;
-    /* কার্ডগুলো মাঝে থাকবে */
 }
 
 /* Card Design */
@@ -225,7 +240,6 @@ header h1 {
     display: block;
 }
 
-/* Info Button */
 .info-btn {
     position: absolute;
     top: 10px;
@@ -277,10 +291,8 @@ header h1 {
     color: white;
 }
 
-/* 📱 MOBILE SPECIFIC DESIGN (Fixes Scroll Issue) */
+/* Mobile Design */
 @media (max-width: 600px) {
-
-    /* Header Fix */
     header {
         padding: 10px 15px;
         flex-wrap: wrap;
@@ -293,10 +305,8 @@ header h1 {
         justify-content: space-between;
     }
 
-    /* Grid Fix */
     .menu-grid {
         grid-template-columns: 1fr 1fr;
-        /* ২টো কলাম */
         gap: 10px;
     }
 
@@ -386,7 +396,41 @@ option {
     background: var(--option-bg);
 }
 
-/* Cart & Order Lists */
+/* 🔥 EXTRAS CHECKBOX STYLE (New) */
+.extras-section {
+    text-align: left;
+    margin: 15px 0;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.extra-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.extra-item label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.extra-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    margin: 0;
+}
+
+/* Cart & Admin */
 .cart-item,
 .order-item {
     display: flex;
@@ -406,23 +450,7 @@ option {
     font-weight: bold;
     margin-top: 15px;
     cursor: pointer;
-}
-
-/* Admin Table */
-.admin-section {
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    font-size: 16px;
 }
 
 .table-container {
@@ -439,26 +467,26 @@ option {
     min-width: 600px;
 }
 
-/* টেবিল স্ক্রল হবে */
+.food-table th,
+.food-table td {
+    padding: 12px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-color);
+}
+
 .food-table th {
     background: var(--primary-color);
     color: white;
-    padding: 12px;
-    text-align: left;
-    white-space: nowrap;
-}
-
-.food-table td {
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color);
-    text-align: left;
-    white-space: nowrap;
 }
 
 .admin-form {
     max-width: 500px;
     margin: 0 auto;
     padding: 20px;
+    background: var(--card-bg);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
 }
 
 /* Whatsapp */
@@ -475,4 +503,50 @@ option {
     z-index: 1000;
     border: 2px solid white;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+/* ---- style.css (Updated for Reasons & About) ---- */
+
+/* ... (আগের সব কোড অপরিবর্তিত থাকবে) ... */
+/* শুধু নিচের অংশটুকু ফাইলের শেষে যোগ করুন বা রিপ্লেস করুন */
+
+/* Cooking Instructions Box */
+.instruction-box {
+    margin: 15px 0;
+    text-align: left;
+}
+.instruction-box label {
+    font-size: 13px;
+    font-weight: bold;
+    color: orange;
+}
+
+/* Cancellation Reason Styles */
+.reason-options {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.reason-options label {
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border-color);
+}
+.reason-options input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #ff4757;
+}
+
+/* About Us Modal Text */
+#aboutModal p {
+    color: var(--text-color);
+    opacity: 0.9;
 }

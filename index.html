@@ -14,6 +14,7 @@
     <header>
         <h1>Foodies Hub 🍔</h1>
         <div class="header-buttons">
+            <button class="theme-btn" onclick="openAboutModal()">ℹ️ About</button>
             <button class="theme-btn" onclick="toggleTheme()">🌓</button>
             <button class="theme-btn" onclick="openMyOrders()">📦</button>
             <button class="cart-btn" onclick="openCartModal()">🛒 <span id="cart-count">0</span></button>
@@ -21,6 +22,10 @@
     </header>
 
     <div class="container">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="🔍 Search for Biryani, Rolls..." onkeyup="searchFood()">
+        </div>
+
         <div class="filter-container">
             <button class="filter-btn active" onclick="filterFood('all')">All</button>
             <button class="filter-btn" onclick="filterFood('veg')">Veg 🌱</button>
@@ -44,7 +49,20 @@
     <div id="checkoutModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeCheckoutModal()">&times;</span>
-            <h2>Details 📝</h2>
+            <h2>Checkout 📝</h2>
+            
+            <div id="extras-container" class="extras-section" style="display: none;">
+                <h4 style="margin-bottom: 10px; color: orange;">Add Extras ➕</h4>
+                <div id="extras-list"></div>
+            </div>
+
+            <div class="instruction-box">
+                <label>👨‍🍳 Cooking Instructions (Optional):</label>
+                <textarea id="cookingNote" rows="2" placeholder="Ex: Less spicy, No onion, Leg piece priority..."></textarea>
+            </div>
+
+            <h3 style="margin: 10px 0;">Total: <span id="final-checkout-price" style="color:#2ed573;">0</span> Rs</h3>
+
             <input type="text" id="cusName" placeholder="Your Name">
             <input type="tel" id="cusPhone" placeholder="Phone Number">
             <textarea id="cusAddress" rows="2" placeholder="Address"></textarea>
@@ -71,7 +89,43 @@
         </div>
     </div>
 
-    <a href="https://wa.me/91YOUR_NUMBER" class="whatsapp-btn">💬 Chat</a>
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCancelModal()">&times;</span>
+            <h2>Reason for Cancellation ❌</h2>
+            <p style="margin-bottom: 10px; font-size: 14px;">Why do you want to cancel?</p>
+            
+            <div class="reason-options">
+                <label><input type="radio" name="cancelReason" value="Changed my mind"> Changed my mind</label>
+                <label><input type="radio" name="cancelReason" value="Ordered by mistake"> Ordered by mistake</label>
+                <label><input type="radio" name="cancelReason" value="Taking too long"> Taking too long</label>
+                <label><input type="radio" name="cancelReason" value="Found better option"> Found better option</label>
+                <label><input type="radio" name="cancelReason" value="Other" id="reasonOtherRadio"> Other (Type below)</label>
+            </div>
+            
+            <textarea id="customCancelReason" rows="2" placeholder="Type your reason here..." style="display:none; margin-top:10px;"></textarea>
+            
+            <button class="checkout-btn" style="background:#ff4757;" onclick="submitCancellation()">Confirm Cancel 🚫</button>
+        </div>
+    </div>
+
+    <div id="aboutModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" onclick="closeAboutModal()">&times;</span>
+            <h2 style="color: #ff4757;">About Foodies Hub 🍔</h2>
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop" style="width:100%; border-radius:10px; margin: 15px 0;">
+            <p style="text-align: justify; font-size: 14px; line-height: 1.6;">
+                Welcome to <b>Foodies Hub!</b> We serve the most delicious and hygienic food in town. From spicy Biryani to cheesy Pizza, we have it all. Our chefs use fresh ingredients to ensure the best taste.
+                <br><br>
+                📍 <b>Location:</b> Durgapur, West Bengal<br>
+                📞 <b>Contact:</b> +91 98765 43210<br>
+                🕒 <b>Timing:</b> 10:00 AM - 11:00 PM
+            </p>
+            <button class="checkout-btn" onclick="closeAboutModal()">Close</button>
+        </div>
+    </div>
+
+    <a href="https://wa.me/917384887602" class="whatsapp-btn">💬 Chat</a>
     <script src="script.js"></script>
 </body>
 </html>
