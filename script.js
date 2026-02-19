@@ -1,4 +1,4 @@
-// script.js - Version 0.5 (Reasons & Instructions)
+// script.js - Version 0.6 (Free Delivery over 600)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
@@ -18,8 +18,15 @@ let myOrderIds = [];
 let isSingleOrder = false;
 let singleItemData = {};
 let selectedExtras = [];
+let orderToCancelId = null;
+
+// Pricing Variables
 let basePrice = 0;
-let orderToCancelId = null; // ক্যানসেল করার জন্য আইডি মনে রাখা
+let deliveryFee = 0;
+let packingFee = 0;
+let discountAmount = 0;
+let appliedCouponCode = "";
+let appliedDeliveryFee = 0; // 🔥 NEW Variable for logic
 
 window.onload = function () {
     showFoodMenu();
@@ -29,14 +36,24 @@ window.onload = function () {
         updateCartUI();
     }
     validateAndFetchOrders();
+    fetchStoreFees();
 };
+
+function fetchStoreFees() {
+    db.collection('settings').doc('fees').get().then(doc => {
+        if (doc.exists) {
+            deliveryFee = parseInt(doc.data().delivery) || 0;
+            packingFee = parseInt(doc.data().packing) || 0;
+        }
+    });
+}
 
 function toggleTheme() {
     document.body.classList.toggle('light-mode');
     localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
 }
 
-// ---- MENU & SEARCH (SAME AS BEFORE) ----
+// ---- MENU & SEARCH ----
 function searchFood() {
     const query = document.getElementById('search-input').value.toLowerCase();
     const container = document.getElementById('menu-container');
@@ -76,8 +93,8 @@ function renderMenuData(foodList) {
             : `<button class="btn" style="background:#555; width:100%; margin-top:10px;" disabled>Out of Stock</button>`;
         container.innerHTML += `
             <div class="food-card">
-                <div class="info-btn" onclick="showDetails('${food.name}', '${food.price}', '${img}', '${desc}')">ℹ️</div>
-                <img src="${img}" onclick="showDetails('${food.name}', '${food.price}', '${img}', '${desc}')">
+                <div class="info-btn" onclick="showDetails('${food.name}', ${food.price}, '${img}', '${desc}')">ℹ️</div>
+                <img src="${img}" onclick="showDetails('${food.name}', ${food.price}, '${img}', '${desc}')">
                 <div class="card-body">
                     <span class="food-name">${food.name}</span>
                     <span class="food-price">${food.price} Rs</span>
@@ -93,22 +110,87 @@ function filterFood(cat) {
     renderMenu(cat);
 }
 
-// ---- CART & ORDER LOGIC ----
+// ---- DETAILS MODAL & ADD TO CART ----
+let currentDetailItem = {};
+function showDetails(name, price, img, desc) {
+    currentDetailItem = { name, price };
+    document.getElementById('detail-img').src = img;
+    document.getElementById('detail-name').innerText = name;
+    document.getElementById('detail-price').innerText = price + " Rs";
+    document.getElementById('detail-desc').innerText = desc;
+    document.getElementById('foodDetailsModal').style.display = 'block';
+}
+function addCurrentToCart() {
+    addToCart(currentDetailItem.name, currentDetailItem.price);
+    closeDetailsModal();
+}
+function closeDetailsModal() { document.getElementById('foodDetailsModal').style.display = 'none'; }
+
+
+// ---- CART LOGIC ----
 function addToCart(name, price) {
-    cart.push({ name, price });
+    let existingItem = cart.find(item => item.name === name);
+    if (existingItem) {
+        existingItem.qty += 1;
+    } else {
+        cart.push({ name, price, qty: 1 });
+    }
     updateCartUI();
     const btn = event.target; const oldText = btn.innerText;
     btn.innerText = "✔"; setTimeout(() => btn.innerText = oldText, 1000);
 }
+
 function updateCartUI() {
-    document.getElementById('cart-count').innerText = cart.length;
+    let totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+    document.getElementById('cart-count').innerText = totalItems;
     localStorage.setItem('myCart', JSON.stringify(cart));
 }
 
+function openCartModal() {
+    document.getElementById('cartModal').style.display = 'block';
+    const box = document.getElementById('cart-items-container');
+    box.innerHTML = '';
+    let totalValue = 0;
+
+    if (cart.length === 0) { box.innerHTML = '<p style="text-align:center;">Empty 😢</p>'; return; }
+
+    cart.forEach((i, idx) => {
+        let itemTotal = parseInt(i.price) * i.qty;
+        totalValue += itemTotal;
+        box.innerHTML += `
+            <div class="cart-item">
+                <div style="flex:2;"><strong>${i.name}</strong><br><small>${i.price} Rs / each</small></div>
+                <div style="flex:1; display:flex; align-items:center; gap:8px;">
+                    <button class="qty-btn" onclick="changeQty(${idx}, -1)">-</button>
+                    <span style="font-weight:bold;">${i.qty}</span>
+                    <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+                </div>
+                <div style="flex:1; text-align:right;">
+                    <span style="color:var(--primary-color); font-weight:bold;">${itemTotal}</span>
+                    <button class="remove-btn" onclick="remCart(${idx})" style="margin-left:5px;">✖</button>
+                </div>
+            </div>`;
+    });
+    box.innerHTML += `<div class="cart-total">Cart Value: ${totalValue} Rs</div>`;
+}
+
+function changeQty(index, amount) {
+    cart[index].qty += amount;
+    if (cart[index].qty <= 0) cart.splice(index, 1);
+    updateCartUI(); openCartModal();
+}
+function remCart(idx) { cart.splice(idx, 1); updateCartUI(); openCartModal(); }
+function closeCartModal() { document.getElementById('cartModal').style.display = 'none'; }
+
+
+// ---- CHECKOUT & PRICING (🔥 FREE DELIVERY LOGIC ADDED) ----
 function buyNow(name, price, extrasString) {
-    isSingleOrder = true; singleItemData = { name, price };
-    basePrice = parseInt(price); selectedExtras = [];
-    renderExtras(extrasString); updateTotalPrice();
+    isSingleOrder = true;
+    singleItemData = { name, price, qty: 1 };
+    basePrice = parseInt(price);
+    selectedExtras = []; discountAmount = 0; appliedCouponCode = ""; document.getElementById('couponInput').value = '';
+    renderExtras(extrasString);
+    calculateFinalBill();
     document.getElementById('checkoutModal').style.display = 'block';
 }
 
@@ -116,8 +198,10 @@ function proceedToCheckout() {
     if (cart.length === 0) return alert("Empty Cart!");
     isSingleOrder = false; closeCartModal();
     document.getElementById('extras-container').style.display = 'none';
-    basePrice = cart.reduce((a, b) => a + parseInt(b.price), 0);
-    updateTotalPrice();
+    discountAmount = 0; appliedCouponCode = ""; document.getElementById('couponInput').value = '';
+
+    basePrice = cart.reduce((a, b) => a + (parseInt(b.price) * b.qty), 0);
+    calculateFinalBill();
     document.getElementById('checkoutModal').style.display = 'block';
 }
 
@@ -136,41 +220,94 @@ function renderExtras(extrasString) {
         }
     });
 }
+
 function toggleExtra(name, price, checkbox) {
     if (checkbox.checked) selectedExtras.push({ name, price });
     else selectedExtras = selectedExtras.filter(e => e.name !== name);
-    updateTotalPrice();
-}
-function updateTotalPrice() {
-    let extraCost = selectedExtras.reduce((sum, item) => sum + item.price, 0);
-    document.getElementById('final-checkout-price').innerText = basePrice + extraCost;
+    calculateFinalBill();
 }
 
-// 🔥 UPDATED CONFIRM ORDER (Saves Cooking Note)
+function applyCoupon() {
+    const code = document.getElementById('couponInput').value.toUpperCase().trim();
+    if (!code) return alert("Enter coupon code!");
+
+    db.collection('coupons').where('code', '==', code).get().then(snap => {
+        if (snap.empty) {
+            alert("Invalid Coupon!"); discountAmount = 0; appliedCouponCode = "";
+        } else {
+            snap.forEach(doc => {
+                discountAmount = parseInt(doc.data().discount);
+                appliedCouponCode = code;
+                alert(`Coupon Applied! You saved ${discountAmount} Rs 🎉`);
+            });
+        }
+        calculateFinalBill();
+    });
+}
+
+// 💰 The Main Billing Brain (🔥 600 Rs FREE DELIVERY LOGIC)
+function calculateFinalBill() {
+    let extraCost = selectedExtras.reduce((sum, item) => sum + item.price, 0);
+    let subtotal = basePrice + extraCost;
+
+    // 👇 Delivery Charge Logic
+    if (subtotal >= 600) {
+        appliedDeliveryFee = 0;
+        document.getElementById('summ-delivery').innerText = `₹0 (Free)`;
+        document.getElementById('summ-delivery').style.color = '#2ed573';
+    } else {
+        appliedDeliveryFee = deliveryFee;
+        document.getElementById('summ-delivery').innerText = `₹${deliveryFee}`;
+        document.getElementById('summ-delivery').style.color = '#ccc';
+    }
+
+    // Update DOM
+    document.getElementById('summ-subtotal').innerText = `₹${subtotal}`;
+    document.getElementById('summ-packing').innerText = `₹${packingFee}`;
+
+    if (discountAmount > 0) {
+        document.getElementById('summ-discount').innerText = `-₹${discountAmount}`;
+    } else {
+        document.getElementById('summ-discount').innerText = `₹0`;
+    }
+
+    let finalTotal = (subtotal + packingFee + appliedDeliveryFee) - discountAmount;
+    if (finalTotal < 0) finalTotal = 0;
+
+    document.getElementById('final-checkout-price').innerText = `₹${finalTotal}`;
+}
+
+// ---- CONFIRM ORDER ----
 function confirmOrder() {
     const name = document.getElementById('cusName').value;
     const phone = document.getElementById('cusPhone').value;
     const address = document.getElementById('cusAddress').value;
-    // 👇 Cooking Note নেওয়া হচ্ছে
     const note = document.getElementById('cookingNote').value;
 
     if (!name || !phone) return alert("Need Name & Phone!");
 
     let finalName = "";
-    let finalPrice = parseInt(document.getElementById('final-checkout-price').innerText);
+    let finalPriceText = document.getElementById('final-checkout-price').innerText.replace('₹', '');
+    let finalPrice = parseInt(finalPriceText);
 
     if (isSingleOrder) {
-        finalName = singleItemData.name;
-        if (selectedExtras.length > 0) finalName += ` (With: ${selectedExtras.map(e => e.name).join(", ")})`;
+        finalName = `1x ${singleItemData.name}`;
+        if (selectedExtras.length > 0) finalName += ` (Extras: ${selectedExtras.map(e => e.name).join(",")})`;
     } else {
-        finalName = cart.map(i => i.name).join(", ") + ` (${cart.length} Items)`;
+        finalName = cart.map(i => `${i.qty}x ${i.name}`).join(" + ");
     }
+
+    // 🔥 Added dynamic delivery fee in bill summary
+    let billDetails = `Packing: ₹${packingFee}, Delivery: ₹${appliedDeliveryFee}`;
+    if (appliedCouponCode) billDetails += `, Coupon: ${appliedCouponCode} (-₹${discountAmount})`;
 
     db.collection("orders").add({
         customerName: name, phone, address,
-        foodName: finalName, price: finalPrice,
-        status: "Pending", cancelledBy: null,
-        note: note || "", // 👇 ডেটাবেসে নোট সেভ
+        foodName: finalName,
+        price: finalPrice,
+        billDetails: billDetails,
+        status: "Pending", cancelledBy: null, cancelReason: "",
+        note: note || "",
         orderTime: firebase.firestore.FieldValue.serverTimestamp()
     }).then((doc) => {
         alert("Order Placed! 🚀");
@@ -182,6 +319,7 @@ function confirmOrder() {
         openMyOrders();
     });
 }
+function closeCheckoutModal() { document.getElementById('checkoutModal').style.display = 'none'; }
 
 // ---- HISTORY & CANCELLATION ----
 function validateAndFetchOrders() {
@@ -199,9 +337,8 @@ function openMyOrders() {
                 const d = doc.data();
                 const st = d.status;
                 const col = st === 'Accepted' ? '#2ed573' : (st === 'Cancelled' ? '#ff4757' : 'orange');
-                let html = `<div class="order-item"><div><b>${d.foodName}</b><br><span style="color:${col}">${st}</span>`;
-                // যদি নোট থাকে তবে দেখাবে
-                if (d.note) html += `<br><small style="color:orange;">📝 Note: ${d.note}</small>`;
+                let html = `<div class="order-item"><div><b>${d.foodName}</b><br><span style="color:${col}">${st} - ₹${d.price}</span>`;
+                if (d.note) html += `<br><small style="color:orange;">📝 ${d.note}</small>`;
                 if (d.cancelReason) html += `<br><small style="color:red;">❌ Reason: ${d.cancelReason}</small>`;
                 html += `</div>`;
 
@@ -212,12 +349,9 @@ function openMyOrders() {
     });
 }
 
-// 🔥 CANCELLATION REASON LOGIC
 function initiateCancel(id) {
     orderToCancelId = id;
     document.getElementById('cancelModal').style.display = 'block';
-
-    // Other radio button logic
     document.querySelectorAll('input[name="cancelReason"]').forEach(radio => {
         radio.addEventListener('change', function () {
             document.getElementById('customCancelReason').style.display = this.value === 'Other' ? 'block' : 'none';
@@ -227,64 +361,22 @@ function initiateCancel(id) {
 
 function submitCancellation() {
     if (!orderToCancelId) return;
-
     let reason = "";
     const radios = document.getElementsByName('cancelReason');
-    for (let radio of radios) {
-        if (radio.checked) {
-            reason = radio.value;
-            break;
-        }
-    }
-
-    if (reason === 'Other') {
-        reason = document.getElementById('customCancelReason').value;
-    }
-
+    for (let radio of radios) { if (radio.checked) { reason = radio.value; break; } }
+    if (reason === 'Other') reason = document.getElementById('customCancelReason').value;
     if (!reason) return alert("Please select a reason!");
 
     db.collection("orders").doc(orderToCancelId).update({
-        status: "Cancelled",
-        cancelledBy: "customer",
-        cancelReason: reason // 👇 কারণ সেভ করা হচ্ছে
+        status: "Cancelled", cancelledBy: "customer", cancelReason: reason
     }).then(() => {
-        alert("Order Cancelled.");
-        closeCancelModal();
-        openMyOrders();
+        alert("Order Cancelled."); closeCancelModal(); openMyOrders();
     });
 }
-
 function closeCancelModal() { document.getElementById('cancelModal').style.display = 'none'; }
-
-// ---- OTHER MODALS ----
-function openCartModal() {
-    document.getElementById('cartModal').style.display = 'block';
-    const box = document.getElementById('cart-items-container');
-    const tot = document.getElementById('cart-total-price');
-    box.innerHTML = ''; let t = 0;
-    if (cart.length === 0) { box.innerHTML = '<p>Empty</p>'; tot.innerText = '0'; return; }
-    cart.forEach((i, idx) => {
-        t += parseInt(i.price);
-        box.innerHTML += `<div class="cart-item"><span>${i.name}</span> <button class="remove-btn" onclick="remCart(${idx})">✖</button></div>`;
-    });
-    tot.innerText = t;
-}
-function remCart(idx) { cart.splice(idx, 1); updateCartUI(); openCartModal(); }
-function closeCartModal() { document.getElementById('cartModal').style.display = 'none'; }
-function closeCheckoutModal() { document.getElementById('checkoutModal').style.display = 'none'; }
 function closeMyOrders() { document.getElementById('myOrdersModal').style.display = 'none'; }
 
-function showDetails(name, price, img, desc) {
-    document.getElementById('detail-img').src = img;
-    document.getElementById('detail-name').innerText = name;
-    document.getElementById('detail-price').innerText = price + " Rs";
-    document.getElementById('detail-desc').innerText = desc;
-    document.getElementById('foodDetailsModal').style.display = 'block';
-}
-function closeDetailsModal() { document.getElementById('foodDetailsModal').style.display = 'none'; }
-
-// About Modal
+// About Us Modal
 function openAboutModal() { document.getElementById('aboutModal').style.display = 'block'; }
 function closeAboutModal() { document.getElementById('aboutModal').style.display = 'none'; }
-
 window.onclick = function (e) { if (e.target.className === 'modal') e.target.style.display = "none"; }

@@ -23,6 +23,7 @@
         <button class="tab-btn active" onclick="showSection('orders')">🔔 Orders</button>
         <button class="tab-btn" onclick="showSection('add')">➕ Add Item</button>
         <button class="tab-btn" onclick="showSection('stock')">📦 Stock</button>
+        <button class="tab-btn" onclick="showSection('settings')">⚙️ Offers & Fees</button>
     </div>
 
     <div class="container">
@@ -31,14 +32,7 @@
             <h2 style="color: #2ed573;">Incoming Orders</h2>
             <div class="table-container">
                 <table class="food-table">
-                    <thead>
-                        <tr>
-                            <th>Customer</th>
-                            <th>Items</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Customer</th><th>Items</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody id="admin-order-list"></tbody>
                 </table>
             </div>
@@ -68,19 +62,56 @@
             <h2>Stock Control 📦</h2>
             <div class="table-container">
                 <table class="food-table">
-                    <thead>
-                        <tr>
-                            <th>Img</th>
-                            <th>Name</th>
-                            <th>Stock</th>
-                            <th>Del</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Img</th><th>Name</th><th>Stock</th><th>Action</th></tr></thead>
                     <tbody id="admin-food-list"></tbody>
                 </table>
             </div>
         </div>
 
+        <div id="sec-settings" class="admin-section" style="display: none;">
+            
+            <div class="admin-form">
+                <h3 style="color: orange;">Delivery & Packing Fees 🛵</h3>
+                <input type="number" id="adminDeliveryFee" placeholder="Delivery Charge (e.g. 20)">
+                <input type="number" id="adminPackingFee" placeholder="Packing Charge (e.g. 10)">
+                <button class="checkout-btn" onclick="saveFees()">Save Fees</button>
+            </div>
+
+            <div class="admin-form" style="margin-top: 20px;">
+                <h3 style="color: #2ed573;">Add Coupon 🎟️</h3>
+                <input type="text" id="couponCode" placeholder="Coupon Code (e.g. SAVE50)" style="text-transform: uppercase;">
+                <input type="number" id="couponDiscount" placeholder="Discount Amount in Rs (e.g. 50)">
+                <button class="checkout-btn" onclick="addCoupon()">Create Coupon</button>
+            </div>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <table class="food-table">
+                    <thead><tr><th>Coupon Code</th><th>Discount (Rs)</th><th>Action</th></tr></thead>
+                    <tbody id="admin-coupon-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="editFoodModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditModal()">×</span>
+            <h2>Edit Item ✏️</h2>
+            <input type="hidden" id="editFoodId">
+            <input type="text" id="editFoodName" placeholder="Food Name">
+            <input type="number" id="editFoodPrice" placeholder="Price (Rs)">
+            <input type="text" id="editFoodImage" placeholder="Image URL">
+            <textarea id="editFoodDesc" rows="2" placeholder="Description (Ingredients)"></textarea>
+            <input type="text" id="editFoodExtras" placeholder="Extras (e.g. Aloo=10, Egg=15)">
+            <select id="editFoodCategory">
+                <option value="all">Select Category</option>
+                <option value="veg">Veg 🌱</option>
+                <option value="non-veg">Non-Veg 🍗</option>
+                <option value="special">Special ⭐</option>
+            </select>
+            <button class="checkout-btn" onclick="updateFood()">Save Changes</button>
+        </div>
     </div>
 
     <script src="admin.js"></script>
