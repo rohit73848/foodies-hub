@@ -14,6 +14,8 @@
     <header>
         <h1>Foodies Hub 🍔</h1>
         <div class="header-buttons">
+            <button class="share-btn" onclick="shareWebsite()">🔗 Share</button>
+            <button class="theme-btn" onclick="openBookingModal()">🍽️ Book Table</button>
             <button class="theme-btn" onclick="openAboutModal()">ℹ️ About</button>
             <button class="theme-btn" onclick="toggleTheme()">🌓</button>
             <button class="theme-btn" onclick="openMyOrders()">📦</button>
@@ -38,7 +40,7 @@
 
     <div id="cartModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeCartModal()">&times;</span>
+            <span class="close-btn" onclick="closeCartModal()">×</span>
             <h2>Cart 🛒</h2>
             <div id="cart-items-container" style="margin-top: 15px;"></div>
             <button class="checkout-btn" onclick="proceedToCheckout()">Checkout 🚀</button>
@@ -47,13 +49,23 @@
 
     <div id="checkoutModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeCheckoutModal()">&times;</span>
+            <span class="close-btn" onclick="closeCheckoutModal()">×</span>
             <h2>Checkout 📝</h2>
             
             <div id="extras-container" class="extras-section" style="display: none;">
                 <h4 style="margin-bottom: 10px; color: orange;">Add Extras ➕</h4>
                 <div id="extras-list"></div>
             </div>
+
+            <div class="instruction-box">
+                <label>👨‍🍳 Cooking Instructions (Optional):</label>
+                <textarea id="cookingNote" rows="2" placeholder="Ex: Less spicy, No onion..."></textarea>
+            </div>
+
+            <input type="text" id="cusName" placeholder="Your Name">
+            <textarea id="cusAddress" rows="2" placeholder="Address"></textarea>
+
+            <input type="tel" id="cusPhone" placeholder="Phone Number">
 
             <div class="coupon-box">
                 <input type="text" id="couponInput" placeholder="Enter Coupon Code">
@@ -71,23 +83,34 @@
                 <div class="payment-method">Payment method <span style="background:var(--card-bg); padding:4px 8px; border-radius:5px; border:1px solid #ccc;">💵 Cash On Delivery</span></div>
             </div>
 
-            <div class="instruction-box">
-                <label>👨‍🍳 Cooking Instructions (Optional):</label>
-                <textarea id="cookingNote" rows="2" placeholder="Ex: Less spicy, No onion..."></textarea>
-            </div>
-
-            <input type="text" id="cusName" placeholder="Your Name">
-            <input type="tel" id="cusPhone" placeholder="Phone Number">
-            <textarea id="cusAddress" rows="2" placeholder="Address"></textarea>
             <button class="checkout-btn" onclick="confirmOrder()">Confirm Order ✅</button>
         </div>
     </div>
 
     <div id="myOrdersModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeMyOrders()">&times;</span>
+            <span class="close-btn" onclick="closeMyOrders()">×</span>
             <h2>History 🕒</h2>
             <div id="order-history-list"></div>
+        </div>
+    </div>
+
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeBookingModal()">×</span>
+            <h2 style="color: #ff4757;">Book A Table 🍽️</h2>
+            <input type="text" id="bookName" placeholder="Your Name">
+            <input type="tel" id="bookPhone" placeholder="Phone Number">
+            <input type="date" id="bookDate">
+            <input type="time" id="bookTime">
+            <select id="bookGuests">
+                <option value="2">2 Guests</option>
+                <option value="4">4 Guests</option>
+                <option value="6">6 Guests</option>
+                <option value="8">8 Guests</option>
+                <option value="10+">10+ Guests</option>
+            </select>
+            <button class="checkout-btn" onclick="submitBooking()">Book Now ✅</button>
         </div>
     </div>
 
@@ -106,17 +129,16 @@
 
     <div id="cancelModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeCancelModal()">&times;</span>
+            <span class="close-btn" onclick="closeCancelModal()">×</span>
             <h2>Reason for Cancellation ❌</h2>
-            <p style="margin-bottom: 10px; font-size: 14px;">Why do you want to cancel?</p>
             <div class="reason-options">
                 <label><input type="radio" name="cancelReason" value="Changed my mind"> Changed my mind</label>
                 <label><input type="radio" name="cancelReason" value="Ordered by mistake"> Ordered by mistake</label>
                 <label><input type="radio" name="cancelReason" value="Taking too long"> Taking too long</label>
                 <label><input type="radio" name="cancelReason" value="Found better option"> Found better option</label>
-                <label><input type="radio" name="cancelReason" value="Other" id="reasonOtherRadio"> Other (Type below)</label>
+                <label><input type="radio" name="cancelReason" value="Other"> Other</label>
             </div>
-            <textarea id="customCancelReason" rows="2" placeholder="Type your reason here..." style="display:none; margin-top:10px;"></textarea>
+            <textarea id="customCancelReason" rows="2" placeholder="Type reason..." style="display:none; margin-top:10px;"></textarea>
             <button class="checkout-btn" style="background:#ff4757;" onclick="submitCancellation()">Confirm Cancel 🚫</button>
         </div>
     </div>
@@ -126,15 +148,15 @@
             <h2 style="color: #ff4757;">About Foodies Hub 🍔</h2>
             <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop" style="width:100%; border-radius:10px; margin: 15px 0;">
             <p style="text-align: justify; font-size: 14px; line-height: 1.6;">
-                Welcome to <b>Foodies Hub!</b> We serve the most delicious and hygienic food in town. From spicy Biryani to cheesy Pizza, we have it all. Our chefs use fresh ingredients to ensure the best taste.
+                Welcome to <b>Foodies Hub!</b> We serve the most delicious and hygienic food.
                 <br><br>
-                📍 <b>Location:</b> <a href="https://maps.google.com/?q=Durgapur,West+Bengal" target="_blank" style="color: #2ed573; text-decoration: underline;">Durgapur, West Bengal</a><br>
+                📍 <b>Location:</b> <a href="https://maps.google.com/?q=Durgapur,West+Bengal" target="_blank" style="color: #2ed573;">Durgapur, West Bengal</a><br>
                 📞 <b>Contact:</b> +91 98765 43210<br>
                 🕒 <b>Timing:</b> 10:00 AM - 11:00 PM
             </p>
             <div class="action-buttons" style="margin-top: 15px;">
                 <button class="btn btn-cart" onclick="closeAboutModal()">Close</button>
-                <button class="btn btn-buy" onclick="window.location.href='tel:+919876543210'">📞 Contact</button>
+                <button class="btn btn-buy" onclick="window.location.href='tel:+917384887602'">📞 Contact</button>
             </div>
         </div>
     </div>

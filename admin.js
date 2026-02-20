@@ -1,4 +1,4 @@
-// admin.js - Version 0.6.1 (With Edit Item Feature)
+// admin.js - Version 0.7 (Reservations & Order IDs - Formatted)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
@@ -13,8 +13,11 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 window.onload = function () {
-    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-mode');
+    }
     renderOrders();
+    renderReservations(); // 🔥 New Dining Feature
     renderFoodTable();
     loadAdminSettings(); 
 };
@@ -24,20 +27,116 @@ function toggleTheme() {
     localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
 }
 
+// --- TAB NAVIGATION ---
 function showSection(sectionId) {
     document.getElementById('sec-orders').style.display = 'none';
+    document.getElementById('sec-reservations').style.display = 'none';
     document.getElementById('sec-add').style.display = 'none';
     document.getElementById('sec-stock').style.display = 'none';
     document.getElementById('sec-settings').style.display = 'none'; 
+    
     document.getElementById('sec-' + sectionId).style.display = 'block';
 
     const buttons = document.querySelectorAll('.tab-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
     
     if (sectionId === 'orders') buttons[0].classList.add('active');
-    if (sectionId === 'add') buttons[1].classList.add('active');
-    if (sectionId === 'stock') buttons[2].classList.add('active');
-    if (sectionId === 'settings') buttons[3].classList.add('active');
+    if (sectionId === 'reservations') buttons[1].classList.add('active');
+    if (sectionId === 'add') buttons[2].classList.add('active');
+    if (sectionId === 'stock') buttons[3].classList.add('active');
+    if (sectionId === 'settings') buttons[4].classList.add('active');
+}
+
+// ---- RENDER ORDERS (With ID & Ratings) ----
+function renderOrders() {
+    const table = document.getElementById('admin-order-list');
+    db.collection("orders").orderBy("orderTime", "desc").onSnapshot(snap => {
+        table.innerHTML = '';
+        
+        if (snap.empty) { 
+            table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No Pending Orders</td></tr>'; 
+            return; 
+        }
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            const color = d.status === 'Accepted' ? 'green' : (d.status === 'Cancelled' ? 'red' : 'orange');
+            const oid = d.orderId || 'N/A';
+            
+            let extraInfo = "";
+            if (d.note) extraInfo += `<br><small style="color:#ffa502;">📝 Note: ${d.note}</small>`;
+            if (d.billDetails) extraInfo += `<br><small style="color:#aaa;">🧾 ${d.billDetails}</small>`;
+            if (d.cancelReason) extraInfo += `<br><small style="color:red;">❌ Reason: ${d.cancelReason}</small>`;
+            if (d.rating && d.rating > 0) extraInfo += `<br><small style="color:gold;">⭐ Rated: ${d.rating}/5</small>`;
+
+            table.innerHTML += `
+                <tr>
+                    <td>
+                        <b style="color:#2ed573;">${oid}</b><br>
+                        <b>${d.customerName}</b><br>
+                        <small>${d.phone}</small><br>
+                        <small>${d.address}</small>
+                    </td>
+                    <td>
+                        <span>${d.foodName}</span><br>
+                        <b>Total: ₹${d.price}</b>
+                        ${extraInfo}
+                    </td>
+                    <td style="color:${color}; font-weight:bold;">${d.status}</td>
+                    <td>
+                        ${d.status === 'Pending' ? `
+                        <button onclick="setStatus('${doc.id}','Accepted')" style="background:#2ed573; color:white; border:none; padding:5px; border-radius:4px; margin-bottom:5px;">✔ Accept</button>
+                        <button onclick="setStatus('${doc.id}','Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px; border-radius:4px;">✖ Cancel</button>` : ''}
+                        
+                        <button onclick="delOrder('${doc.id}')" style="background:#555; border:none; padding:5px; border-radius:4px; margin-top:5px; display:block;">🗑️ Delete</button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+
+function setStatus(id, st) {
+    let data = { status: st };
+    if (st === 'Cancelled') data.cancelledBy = 'admin';
+    db.collection("orders").doc(id).update(data);
+}
+
+function delOrder(id) { 
+    if (confirm("Delete Order?")) {
+        db.collection("orders").doc(id).delete(); 
+    }
+}
+
+// ---- 🔥 RENDER RESERVATIONS (Dining) ----
+function renderReservations() {
+    const table = document.getElementById('admin-res-list');
+    db.collection("reservations").orderBy("createdAt", "desc").onSnapshot(snap => {
+        table.innerHTML = '';
+        
+        if (snap.empty) { 
+            table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No Bookings</td></tr>'; 
+            return; 
+        }
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            table.innerHTML += `
+                <tr>
+                    <td><b>${d.name}</b><br><small>${d.phone}</small></td>
+                    <td>📅 ${d.date}<br>⏰ ${d.time}</td>
+                    <td>👥 ${d.guests} Guests</td>
+                    <td>
+                        <button onclick="delRes('${doc.id}')" style="color:red; background:none; border:none; cursor:pointer;">🗑️ Delete</button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+
+function delRes(id) { 
+    if(confirm("Delete Booking?")) {
+        db.collection("reservations").doc(id).delete(); 
+    }
 }
 
 // ---- ADD ITEM ----
@@ -52,60 +151,25 @@ function addNewFood() {
     if (!name || !price || category === 'all') return alert("Fill mandatory fields!");
 
     db.collection("menu_items").add({
-        name: name, price: price, image: image, description: desc || "Tasty food!",
+        name: name, 
+        price: price, 
+        image: image, 
+        description: desc || "Tasty food!",
         extras: extras || "", 
-        category: category, available: true,
+        category: category, 
+        available: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         alert("Item Added!");
-        document.getElementById('foodName').value = ''; document.getElementById('foodPrice').value = ''; document.getElementById('foodDesc').value = ''; document.getElementById('foodExtras').value = ''; document.getElementById('foodImage').value = '';
+        document.getElementById('foodName').value = ''; 
+        document.getElementById('foodPrice').value = ''; 
+        document.getElementById('foodDesc').value = ''; 
+        document.getElementById('foodExtras').value = ''; 
+        document.getElementById('foodImage').value = '';
     });
 }
 
-// ---- RENDER ORDERS ----
-function renderOrders() {
-    const table = document.getElementById('admin-order-list');
-    db.collection("orders").orderBy("orderTime", "desc").onSnapshot(snap => {
-        table.innerHTML = '';
-        if (snap.empty) { table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No Pending Orders</td></tr>'; return; }
-
-        snap.forEach(doc => {
-            const d = doc.data();
-            const color = d.status === 'Accepted' ? 'green' : (d.status === 'Cancelled' ? 'red' : 'orange');
-            
-            let extraInfo = "";
-            if (d.note) extraInfo += `<br><small style="color:#ffa502;">📝 Note: ${d.note}</small>`;
-            if (d.billDetails) extraInfo += `<br><small style="color:#aaa;">🧾 ${d.billDetails}</small>`;
-            if (d.cancelReason) extraInfo += `<br><small style="color:red;">❌ Reason: ${d.cancelReason}</small>`;
-
-            table.innerHTML += `
-                <tr>
-                    <td><b>${d.customerName}</b><br><small>${d.phone}</small><br><small>${d.address}</small></td>
-                    <td>
-                        <span style="color:#2ed573; font-weight:bold;">${d.foodName}</span><br>
-                        <b>Total: ₹${d.price}</b>
-                        ${extraInfo}
-                    </td>
-                    <td style="color:${color}; font-weight:bold;">${d.status}</td>
-                    <td>
-                        ${d.status === 'Pending' ? `
-                        <button onclick="setStatus('${doc.id}','Accepted')" style="background:#2ed573; color:white; border:none; padding:5px; border-radius:4px; margin-bottom:5px;">✔ Accept</button>
-                        <button onclick="setStatus('${doc.id}','Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px; border-radius:4px;">✖ Cancel</button>` : ''}
-                        <button onclick="delOrder('${doc.id}')" style="background:#555; border:none; padding:5px; border-radius:4px; margin-top:5px; display:block;">🗑️ Delete</button>
-                    </td>
-                </tr>`;
-        });
-    });
-}
-
-function setStatus(id, st) {
-    let data = { status: st };
-    if (st === 'Cancelled') data.cancelledBy = 'admin';
-    db.collection("orders").doc(id).update(data);
-}
-function delOrder(id) { if (confirm("Delete Order?")) db.collection("orders").doc(id).delete(); }
-
-// ---- 🔥 STOCK CONTROL (With Edit Button) ----
+// ---- STOCK CONTROL ----
 function renderFoodTable() {
     const table = document.getElementById('admin-food-list');
     db.collection("menu_items").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -115,10 +179,9 @@ function renderFoodTable() {
             const cls = f.available ? 'in-stock' : 'out-stock';
             const txt = f.available ? 'In Stock' : 'Out';
             const img = f.image || 'https://via.placeholder.com/50';
-
-            // Escaping quotes for function passing
-            const safeDesc = f.description ? f.description.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
-            const safeExtras = f.extras ? f.extras.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
+            
+            const safeDesc = f.description ? f.description.replace(/'/g, "\\'").replace(/"/g, '"') : '';
+            const safeExtras = f.extras ? f.extras.replace(/'/g, "\\'").replace(/"/g, '"') : '';
 
             table.innerHTML += `
                 <tr>
@@ -133,10 +196,18 @@ function renderFoodTable() {
         });
     });
 }
-function togStock(id, s) { db.collection("menu_items").doc(id).update({ available: !s }); }
-function delFood(id) { if (confirm("Delete Item?")) db.collection("menu_items").doc(id).delete(); }
 
-// ---- 🔥 EDIT ITEM LOGIC ----
+function togStock(id, s) { 
+    db.collection("menu_items").doc(id).update({ available: !s }); 
+}
+
+function delFood(id) { 
+    if (confirm("Delete Item?")) {
+        db.collection("menu_items").doc(id).delete(); 
+    }
+}
+
+// ---- EDIT ITEM LOGIC ----
 function openEditModal(id, name, price, img, desc, extras, category) {
     document.getElementById('editFoodId').value = id;
     document.getElementById('editFoodName').value = name;
@@ -149,8 +220,8 @@ function openEditModal(id, name, price, img, desc, extras, category) {
     document.getElementById('editFoodModal').style.display = 'block';
 }
 
-function closeEditModal() {
-    document.getElementById('editFoodModal').style.display = 'none';
+function closeEditModal() { 
+    document.getElementById('editFoodModal').style.display = 'none'; 
 }
 
 function updateFood() {
@@ -161,20 +232,15 @@ function updateFood() {
     const desc = document.getElementById('editFoodDesc').value;
     const extras = document.getElementById('editFoodExtras').value;
     const category = document.getElementById('editFoodCategory').value;
-
+    
     if (!name || !price) return alert("Name and Price are required!");
-
-    db.collection("menu_items").doc(id).update({
-        name: name,
-        price: price,
-        image: image,
-        description: desc,
-        extras: extras,
-        category: category
-    }).then(() => {
-        alert("Item Updated Successfully! ✅");
-        closeEditModal();
-    }).catch(err => alert("Error updating: " + err.message));
+    
+    db.collection("menu_items").doc(id).update({ 
+        name, price, image, description: desc, extras, category 
+    }).then(() => { 
+        alert("Item Updated!"); 
+        closeEditModal(); 
+    });
 }
 
 // ---- SETTINGS & COUPONS ----
@@ -185,7 +251,7 @@ function loadAdminSettings() {
             document.getElementById('adminPackingFee').value = doc.data().packing || 0;
         }
     });
-
+    
     db.collection('coupons').onSnapshot(snap => {
         const table = document.getElementById('admin-coupon-list');
         table.innerHTML = '';
@@ -195,7 +261,9 @@ function loadAdminSettings() {
                 <tr>
                     <td style="font-weight:bold; color:orange;">${data.code}</td>
                     <td style="color:#2ed573;">₹${data.discount}</td>
-                    <td><button onclick="delCoupon('${doc.id}')" style="color:red; border:none; background:none;">🗑️</button></td>
+                    <td>
+                        <button onclick="delCoupon('${doc.id}')" style="color:red; border:none; background:none; cursor:pointer;">🗑️</button>
+                    </td>
                 </tr>`;
         });
     });
@@ -204,32 +272,37 @@ function loadAdminSettings() {
 function saveFees() {
     const del = document.getElementById('adminDeliveryFee').value;
     const pack = document.getElementById('adminPackingFee').value;
-    db.collection('settings').doc('fees').set({
-        delivery: parseInt(del) || 0,
-        packing: parseInt(pack) || 0
-    }).then(() => alert("Fees Saved! Customers will now see these charges."));
+    db.collection('settings').doc('fees').set({ 
+        delivery: parseInt(del) || 0, 
+        packing: parseInt(pack) || 0 
+    }).then(() => alert("Fees Saved!"));
 }
 
 function addCoupon() {
     const code = document.getElementById('couponCode').value.toUpperCase().trim();
     const discount = document.getElementById('couponDiscount').value;
-
-    if(!code || !discount) return alert("Enter code and discount amount!");
-
-    db.collection('coupons').add({
-        code: code,
-        discount: parseInt(discount)
-    }).then(() => {
-        alert("Coupon Created!");
-        document.getElementById('couponCode').value = '';
-        document.getElementById('couponDiscount').value = '';
+    
+    if(!code || !discount) return alert("Enter code & discount!");
+    
+    db.collection('coupons').add({ 
+        code, 
+        discount: parseInt(discount) 
+    }).then(() => { 
+        alert("Coupon Created!"); 
+        document.getElementById('couponCode').value = ''; 
+        document.getElementById('couponDiscount').value = ''; 
     });
 }
 
-function delCoupon(id) {
-    if(confirm("Delete this coupon?")) db.collection('coupons').doc(id).delete();
+function delCoupon(id) { 
+    if(confirm("Delete coupon?")) {
+        db.collection('coupons').doc(id).delete(); 
+    }
 }
 
+// Modal closing logic
 window.onclick = function (e) { 
-    if (e.target.className === 'modal') e.target.style.display = "none"; 
+    if (e.target.className === 'modal') {
+        e.target.style.display = "none"; 
+    }
 }

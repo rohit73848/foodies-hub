@@ -1,4 +1,4 @@
-/* ---- style.css (Version 0.6 - Advanced Features) ---- */
+/* ---- style.css (Version 0.7 - Dining & Ratings) ---- */
 
 :root {
     --bg-color: #161623;
@@ -78,7 +78,8 @@ header h1 {
 }
 
 .theme-btn,
-.cart-btn {
+.cart-btn,
+.share-btn {
     background: var(--card-bg);
     color: var(--text-color);
     padding: 6px 12px;
@@ -95,7 +96,8 @@ header h1 {
 }
 
 .theme-btn:hover,
-.cart-btn:hover {
+.cart-btn:hover,
+.share-btn:hover {
     background: var(--primary-color);
     color: white;
     box-shadow: 0 0 10px var(--glow-color);
@@ -287,7 +289,7 @@ header h1 {
     color: white;
 }
 
-/* 📱 Mobile Design */
+/* Mobile Design */
 @media (max-width: 600px) {
     header {
         padding: 10px 15px;
@@ -392,7 +394,7 @@ option {
     background: var(--option-bg);
 }
 
-/* Cart Quantity Buttons */
+/* Cart & Order Items */
 .cart-item,
 .order-item {
     display: flex;
@@ -436,7 +438,7 @@ option {
     font-size: 16px;
 }
 
-/* 🔥 NEW: Price Details & Coupons (Checkout) */
+/* Pricing & Extras */
 .coupon-box {
     display: flex;
     gap: 5px;
@@ -504,7 +506,6 @@ option {
     font-weight: bold;
 }
 
-/* Extras & Reasons */
 .extras-section {
     text-align: left;
     margin: 15px 0;
@@ -547,34 +548,22 @@ option {
     color: orange;
 }
 
-.reason-options {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 10px;
+/* Ratings */
+.star-rating {
+    color: gold;
+    font-size: 18px;
+    margin-top: 5px;
 }
 
-.reason-options label {
+.star-input {
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid var(--border-color);
+    font-size: 20px;
+    color: #555;
+    transition: 0.2s;
 }
 
-.reason-options input[type="radio"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #ff4757;
-}
-
-#aboutModal p {
-    color: var(--text-color);
-    opacity: 0.9;
+.star-input.active {
+    color: gold;
 }
 
 /* Admin Table */
@@ -647,7 +636,7 @@ option {
     background: #ff4757;
 }
 
-/* Whatsapp */
+/* Whatsapp & Share */
 .whatsapp-btn {
     position: fixed;
     bottom: 20px;
