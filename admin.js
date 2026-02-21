@@ -1,4 +1,4 @@
-// admin.js - Version 0.7 (Reservations & Order IDs - Formatted)
+// admin.js - Version 0.8 (Cancellation Approval Logic)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
@@ -17,7 +17,7 @@ window.onload = function () {
         document.body.classList.add('light-mode');
     }
     renderOrders();
-    renderReservations(); // 🔥 New Dining Feature
+    renderReservations(); 
     renderFoodTable();
     loadAdminSettings(); 
 };
@@ -47,7 +47,7 @@ function showSection(sectionId) {
     if (sectionId === 'settings') buttons[4].classList.add('active');
 }
 
-// ---- RENDER ORDERS (With ID & Ratings) ----
+// ---- RENDER ORDERS (🔥 NEW: Cancel Request Approval logic) ----
 function renderOrders() {
     const table = document.getElementById('admin-order-list');
     db.collection("orders").orderBy("orderTime", "desc").onSnapshot(snap => {
@@ -60,7 +60,11 @@ function renderOrders() {
 
         snap.forEach(doc => {
             const d = doc.data();
-            const color = d.status === 'Accepted' ? 'green' : (d.status === 'Cancelled' ? 'red' : 'orange');
+            let color = 'orange';
+            if(d.status === 'Accepted') color = 'green';
+            if(d.status === 'Cancelled') color = 'red';
+            if(d.status === 'Cancel Requested') color = '#e1b12c';
+
             const oid = d.orderId || 'N/A';
             
             let extraInfo = "";
@@ -68,6 +72,19 @@ function renderOrders() {
             if (d.billDetails) extraInfo += `<br><small style="color:#aaa;">🧾 ${d.billDetails}</small>`;
             if (d.cancelReason) extraInfo += `<br><small style="color:red;">❌ Reason: ${d.cancelReason}</small>`;
             if (d.rating && d.rating > 0) extraInfo += `<br><small style="color:gold;">⭐ Rated: ${d.rating}/5</small>`;
+
+            // Action Buttons Logic
+            let actionButtons = '';
+            if (d.status === 'Pending') {
+                actionButtons = `
+                <button onclick="setStatus('${doc.id}','Accepted')" style="background:#2ed573; color:white; border:none; padding:5px; border-radius:4px; margin-bottom:5px;">✔ Accept</button>
+                <button onclick="setStatus('${doc.id}','Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px; border-radius:4px;">✖ Cancel</button>`;
+            } else if (d.status === 'Cancel Requested') {
+                // If customer requested a cancel
+                actionButtons = `
+                <button onclick="setStatus('${doc.id}','Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px; border-radius:4px; margin-bottom:5px;">✔ Approve Cancel</button>
+                <button onclick="setStatus('${doc.id}','Pending')" style="background:#f39c12; color:white; border:none; padding:5px; border-radius:4px;">✖ Reject Cancel</button>`;
+            }
 
             table.innerHTML += `
                 <tr>
@@ -84,10 +101,7 @@ function renderOrders() {
                     </td>
                     <td style="color:${color}; font-weight:bold;">${d.status}</td>
                     <td>
-                        ${d.status === 'Pending' ? `
-                        <button onclick="setStatus('${doc.id}','Accepted')" style="background:#2ed573; color:white; border:none; padding:5px; border-radius:4px; margin-bottom:5px;">✔ Accept</button>
-                        <button onclick="setStatus('${doc.id}','Cancelled')" style="background:#ff4757; color:white; border:none; padding:5px; border-radius:4px;">✖ Cancel</button>` : ''}
-                        
+                        ${actionButtons}
                         <button onclick="delOrder('${doc.id}')" style="background:#555; border:none; padding:5px; border-radius:4px; margin-top:5px; display:block;">🗑️ Delete</button>
                     </td>
                 </tr>`;
@@ -107,7 +121,7 @@ function delOrder(id) {
     }
 }
 
-// ---- 🔥 RENDER RESERVATIONS (Dining) ----
+// ---- RENDER RESERVATIONS ----
 function renderReservations() {
     const table = document.getElementById('admin-res-list');
     db.collection("reservations").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -151,20 +165,13 @@ function addNewFood() {
     if (!name || !price || category === 'all') return alert("Fill mandatory fields!");
 
     db.collection("menu_items").add({
-        name: name, 
-        price: price, 
-        image: image, 
-        description: desc || "Tasty food!",
-        extras: extras || "", 
-        category: category, 
-        available: true,
+        name: name, price: price, image: image, description: desc || "Tasty food!",
+        extras: extras || "", category: category, available: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         alert("Item Added!");
-        document.getElementById('foodName').value = ''; 
-        document.getElementById('foodPrice').value = ''; 
-        document.getElementById('foodDesc').value = ''; 
-        document.getElementById('foodExtras').value = ''; 
+        document.getElementById('foodName').value = ''; document.getElementById('foodPrice').value = ''; 
+        document.getElementById('foodDesc').value = ''; document.getElementById('foodExtras').value = ''; 
         document.getElementById('foodImage').value = '';
     });
 }
@@ -197,15 +204,8 @@ function renderFoodTable() {
     });
 }
 
-function togStock(id, s) { 
-    db.collection("menu_items").doc(id).update({ available: !s }); 
-}
-
-function delFood(id) { 
-    if (confirm("Delete Item?")) {
-        db.collection("menu_items").doc(id).delete(); 
-    }
-}
+function togStock(id, s) { db.collection("menu_items").doc(id).update({ available: !s }); }
+function delFood(id) { if (confirm("Delete Item?")) db.collection("menu_items").doc(id).delete(); }
 
 // ---- EDIT ITEM LOGIC ----
 function openEditModal(id, name, price, img, desc, extras, category) {
@@ -220,9 +220,7 @@ function openEditModal(id, name, price, img, desc, extras, category) {
     document.getElementById('editFoodModal').style.display = 'block';
 }
 
-function closeEditModal() { 
-    document.getElementById('editFoodModal').style.display = 'none'; 
-}
+function closeEditModal() { document.getElementById('editFoodModal').style.display = 'none'; }
 
 function updateFood() {
     const id = document.getElementById('editFoodId').value;
@@ -235,12 +233,8 @@ function updateFood() {
     
     if (!name || !price) return alert("Name and Price are required!");
     
-    db.collection("menu_items").doc(id).update({ 
-        name, price, image, description: desc, extras, category 
-    }).then(() => { 
-        alert("Item Updated!"); 
-        closeEditModal(); 
-    });
+    db.collection("menu_items").doc(id).update({ name, price, image, description: desc, extras, category })
+    .then(() => { alert("Item Updated!"); closeEditModal(); });
 }
 
 // ---- SETTINGS & COUPONS ----
@@ -261,9 +255,7 @@ function loadAdminSettings() {
                 <tr>
                     <td style="font-weight:bold; color:orange;">${data.code}</td>
                     <td style="color:#2ed573;">₹${data.discount}</td>
-                    <td>
-                        <button onclick="delCoupon('${doc.id}')" style="color:red; border:none; background:none; cursor:pointer;">🗑️</button>
-                    </td>
+                    <td><button onclick="delCoupon('${doc.id}')" style="color:red; border:none; background:none; cursor:pointer;">🗑️</button></td>
                 </tr>`;
         });
     });
@@ -272,37 +264,24 @@ function loadAdminSettings() {
 function saveFees() {
     const del = document.getElementById('adminDeliveryFee').value;
     const pack = document.getElementById('adminPackingFee').value;
-    db.collection('settings').doc('fees').set({ 
-        delivery: parseInt(del) || 0, 
-        packing: parseInt(pack) || 0 
-    }).then(() => alert("Fees Saved!"));
+    db.collection('settings').doc('fees').set({ delivery: parseInt(del) || 0, packing: parseInt(pack) || 0 })
+    .then(() => alert("Fees Saved!"));
 }
 
 function addCoupon() {
     const code = document.getElementById('couponCode').value.toUpperCase().trim();
     const discount = document.getElementById('couponDiscount').value;
-    
     if(!code || !discount) return alert("Enter code & discount!");
     
-    db.collection('coupons').add({ 
-        code, 
-        discount: parseInt(discount) 
-    }).then(() => { 
+    db.collection('coupons').add({ code, discount: parseInt(discount) })
+    .then(() => { 
         alert("Coupon Created!"); 
         document.getElementById('couponCode').value = ''; 
         document.getElementById('couponDiscount').value = ''; 
     });
 }
 
-function delCoupon(id) { 
-    if(confirm("Delete coupon?")) {
-        db.collection('coupons').doc(id).delete(); 
-    }
-}
+function delCoupon(id) { if(confirm("Delete coupon?")) db.collection('coupons').doc(id).delete(); }
 
 // Modal closing logic
-window.onclick = function (e) { 
-    if (e.target.className === 'modal') {
-        e.target.style.display = "none"; 
-    }
-}
+window.onclick = function (e) { if (e.target.className === 'modal') e.target.style.display = "none"; }

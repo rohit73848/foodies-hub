@@ -1,4 +1,4 @@
-/* ---- style.css (Version 0.7 - Dining & Ratings) ---- */
+/* ---- style.css (Version 0.8 - UI Fixed) ---- */
 
 :root {
     --bg-color: #161623;
@@ -289,18 +289,29 @@ header h1 {
     color: white;
 }
 
-/* Mobile Design */
+/* 🔥 MOBILE DESIGN FIXED 🔥 */
 @media (max-width: 600px) {
     header {
-        padding: 10px 15px;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: center;
+        padding: 15px;
+        flex-direction: column;
+        /* টাইটেল উপরে, বাটন নিচে */
+        gap: 12px;
     }
 
     .header-buttons {
         width: 100%;
-        justify-content: space-between;
+        display: flex;
+        flex-wrap: wrap;
+        /* বাটনগুলো জায়গা না পেলে নিচে নামবে */
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .theme-btn,
+    .cart-btn,
+    .share-btn {
+        font-size: 11px;
+        padding: 6px 10px;
     }
 
     .menu-grid {

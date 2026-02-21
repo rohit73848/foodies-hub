@@ -1,4 +1,4 @@
-// script.js - Version 0.7 (Order ID, Booking, Share, Ratings)
+// script.js - Version 0.8 (Cancel Request & UI Fixed)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDwb7cSVOgHQNY0ELb-Ilzfi5fVFLItIew",
@@ -53,7 +53,7 @@ function toggleTheme() {
     localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
 }
 
-// ---- SHARE FEATURE (NEW) ----
+// ---- SHARE FEATURE ----
 function shareWebsite() {
     if (navigator.share) {
         navigator.share({
@@ -66,7 +66,7 @@ function shareWebsite() {
     }
 }
 
-// ---- BOOKING SYSTEM (NEW) ----
+// ---- BOOKING SYSTEM ----
 function openBookingModal() { document.getElementById('bookingModal').style.display = 'block'; }
 function closeBookingModal() { document.getElementById('bookingModal').style.display = 'none'; }
 
@@ -89,7 +89,7 @@ function submitBooking() {
     });
 }
 
-// ---- MENU & SEARCH (Existing) ----
+// ---- MENU & SEARCH ----
 function searchFood() {
     const query = document.getElementById('search-input').value.toLowerCase();
     const container = document.getElementById('menu-container');
@@ -121,12 +121,15 @@ function renderMenuData(foodList) {
         const img = food.image || 'https://via.placeholder.com/300';
         const desc = food.description ? food.description.replace(/'/g, "\\'") : "Tasty!";
         const extras = food.extras || "";
+        
+        // 🔥 FIXED: Changed 'Cart' button text to 'Add'
         let btnHTML = food.available
             ? `<div class="action-buttons">
                 <button class="btn btn-buy" onclick="buyNow('${food.name}', ${food.price}, '${extras}')">Buy</button>
-                <button class="btn btn-cart" onclick="addToCart('${food.name}', ${food.price})">Cart</button>
+                <button class="btn btn-cart" onclick="addToCart('${food.name}', ${food.price})">Add</button>
                </div>`
             : `<button class="btn" style="background:#555; width:100%; margin-top:10px;" disabled>Out of Stock</button>`;
+        
         container.innerHTML += `
             <div class="food-card">
                 <div class="info-btn" onclick="showDetails('${food.name}', ${food.price}, '${img}', '${desc}')">ℹ️</div>
@@ -139,6 +142,7 @@ function renderMenuData(foodList) {
             </div>`;
     });
 }
+
 function filterFood(cat) {
     document.getElementById('search-input').value = '';
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -280,7 +284,7 @@ function calculateFinalBill() {
     document.getElementById('final-checkout-price').innerText = `₹${finalTotal}`;
 }
 
-// ---- CONFIRM ORDER (With Order ID) ----
+// ---- CONFIRM ORDER ----
 function confirmOrder() {
     const name = document.getElementById('cusName').value;
     const phone = document.getElementById('cusPhone').value;
@@ -289,7 +293,6 @@ function confirmOrder() {
 
     if (!name || !phone) return alert("Need Name & Phone!");
 
-    // 🔥 GENERATE ORDER ID (#ORD-Random)
     const orderId = '#ORD-' + Math.floor(100000 + Math.random() * 900000);
 
     let finalName = "";
@@ -307,14 +310,14 @@ function confirmOrder() {
     if (appliedCouponCode) billDetails += `, Coupon: ${appliedCouponCode} (-₹${discountAmount})`;
 
     db.collection("orders").add({
-        orderId: orderId, // 🔥 Save Order ID
+        orderId: orderId, 
         customerName: name, phone, address,
         foodName: finalName,
         price: finalPrice,
         billDetails: billDetails,
         status: "Pending", cancelledBy: null, cancelReason: "",
         note: note || "",
-        rating: 0, // Default 0
+        rating: 0, 
         orderTime: firebase.firestore.FieldValue.serverTimestamp()
     }).then((doc) => {
         alert(`Order Placed Successfully! ID: ${orderId} 🚀`);
@@ -345,7 +348,12 @@ function openMyOrders() {
                 const d = doc.data();
                 const st = d.status;
                 const oid = d.orderId || 'N/A';
-                const col = st === 'Accepted' ? '#2ed573' : (st === 'Cancelled' ? '#ff4757' : 'orange');
+                
+                // Color formatting
+                let col = 'orange';
+                if(st === 'Accepted') col = '#2ed573';
+                if(st === 'Cancelled') col = '#ff4757';
+                if(st === 'Cancel Requested') col = '#e1b12c'; // Yellow-orange for request
 
                 let html = `<div class="order-item">
                     <div>
@@ -356,7 +364,6 @@ function openMyOrders() {
                 if (d.note) html += `<br><small style="color:orange;">📝 ${d.note}</small>`;
                 if (d.cancelReason) html += `<br><small style="color:red;">❌ Reason: ${d.cancelReason}</small>`;
 
-                // 🔥 Rating System for Accepted Orders
                 if (st === 'Accepted') {
                     let starHTML = '';
                     for (let i = 1; i <= 5; i++) {
@@ -367,7 +374,12 @@ function openMyOrders() {
                 }
 
                 html += `</div>`;
-                if (st === 'Pending') html += `<button onclick="initiateCancel('${doc.id}')" style="color:red;border:none;background:none;">Cancel</button>`;
+                
+                // Only show cancel button if status is Pending
+                if (st === 'Pending') {
+                    html += `<button onclick="initiateCancel('${doc.id}')" style="color:red;border:none;background:none;font-weight:bold;">Cancel</button>`;
+                }
+                
                 box.innerHTML += html + '</div>';
             }
         });
@@ -389,6 +401,7 @@ function initiateCancel(id) {
     });
 }
 
+// 🔥 FIXED: Cancellation Request Logic
 function submitCancellation() {
     if (!orderToCancelId) return;
     let reason = "";
@@ -397,10 +410,14 @@ function submitCancellation() {
     if (reason === 'Other') reason = document.getElementById('customCancelReason').value;
     if (!reason) return alert("Please select a reason!");
 
+    // Status changed to "Cancel Requested" instead of "Cancelled"
     db.collection("orders").doc(orderToCancelId).update({
-        status: "Cancelled", cancelledBy: "customer", cancelReason: reason
+        status: "Cancel Requested", 
+        cancelReason: reason
     }).then(() => {
-        alert("Order Cancelled."); closeCancelModal(); openMyOrders();
+        alert("Cancellation request sent to manager. Please wait for approval. ⏳"); 
+        closeCancelModal(); 
+        openMyOrders();
     });
 }
 function closeCancelModal() { document.getElementById('cancelModal').style.display = 'none'; }
