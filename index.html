@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foodies Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="features.css">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 </head>
+
 <body>
 
     <header>
@@ -17,6 +23,8 @@
             <button class="share-btn" onclick="shareWebsite()">🔗 Share</button>
             <button class="theme-btn" onclick="openBookingModal()">🍽️ Book Table</button>
             <button class="theme-btn" onclick="openAboutModal()">ℹ️ About</button>
+            <button class="theme-btn" onclick="window.location.href='profile.html'">👤</button>
+
             <button class="theme-btn" onclick="toggleTheme()">🌓</button>
             <button class="theme-btn" onclick="openMyOrders()">📦</button>
             <button class="cart-btn" onclick="openCartModal()">🛒 <span id="cart-count">0</span></button>
@@ -34,7 +42,7 @@
             <button class="filter-btn" onclick="filterFood('non-veg')">Non-Veg 🍗</button>
             <button class="filter-btn" onclick="filterFood('special')">Special ⭐</button>
         </div>
-        
+
         <div class="menu-grid" id="menu-container"></div>
     </div>
 
@@ -51,7 +59,7 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeCheckoutModal()">×</span>
             <h2>Checkout 📝</h2>
-            
+
             <div id="extras-container" class="extras-section" style="display: none;">
                 <h4 style="margin-bottom: 10px; color: orange;">Add Extras ➕</h4>
                 <div id="extras-list"></div>
@@ -77,10 +85,14 @@
                 <div class="price-row"><span>Listing price</span><span id="summ-subtotal">₹0</span></div>
                 <div class="price-row"><span>Packing Charge</span><span id="summ-packing">₹0</span></div>
                 <div class="price-row"><span>Delivery Fee</span><span id="summ-delivery">₹0</span></div>
-                <div class="price-row discount-row"><span>Discount / Coupon</span><span id="summ-discount">-₹0</span></div>
+                <div class="price-row discount-row"><span>Discount / Coupon</span><span id="summ-discount">-₹0</span>
+                </div>
                 <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;">
-                <div class="price-row final-total"><span>Total Amount</span><span id="final-checkout-price">₹0</span></div>
-                <div class="payment-method">Payment method <span style="background:var(--card-bg); padding:4px 8px; border-radius:5px; border:1px solid #ccc;">💵 Cash On Delivery</span></div>
+                <div class="price-row final-total"><span>Total Amount</span><span id="final-checkout-price">₹0</span>
+                </div>
+                <div class="payment-method">Payment method <span
+                        style="background:var(--card-bg); padding:4px 8px; border-radius:5px; border:1px solid #ccc;">💵
+                        Cash On Delivery</span></div>
             </div>
 
             <button class="checkout-btn" onclick="confirmOrder()">Confirm Order ✅</button>
@@ -119,7 +131,9 @@
             <img id="detail-img" src="" style="width:100%; height:200px; object-fit:cover; border-radius:10px;">
             <h2 id="detail-name" style="margin-top:10px; color:#ff4757;"></h2>
             <h3 id="detail-price" style="margin:5px 0;"></h3>
-            <p id="detail-desc" style="color:var(--text-color); opacity:0.8; margin:15px 0; font-size:14px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"></p>
+            <p id="detail-desc"
+                style="color:var(--text-color); opacity:0.8; margin:15px 0; font-size:14px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+            </p>
             <div class="action-buttons">
                 <button class="btn btn-cart" onclick="closeDetailsModal()">Close</button>
                 <button class="btn btn-buy" onclick="addCurrentToCart()">Add to Cart</button>
@@ -138,19 +152,23 @@
                 <label><input type="radio" name="cancelReason" value="Found better option"> Found better option</label>
                 <label><input type="radio" name="cancelReason" value="Other"> Other</label>
             </div>
-            <textarea id="customCancelReason" rows="2" placeholder="Type reason..." style="display:none; margin-top:10px;"></textarea>
-            <button class="checkout-btn" style="background:#ff4757;" onclick="submitCancellation()">Confirm Cancel 🚫</button>
+            <textarea id="customCancelReason" rows="2" placeholder="Type reason..."
+                style="display:none; margin-top:10px;"></textarea>
+            <button class="checkout-btn" style="background:#ff4757;" onclick="submitCancellation()">Confirm Cancel
+                🚫</button>
         </div>
     </div>
 
     <div id="aboutModal" class="modal">
         <div class="modal-content" style="text-align: center;">
             <h2 style="color: #ff4757;">About Foodies Hub 🍔</h2>
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop" style="width:100%; border-radius:10px; margin: 15px 0;">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop"
+                style="width:100%; border-radius:10px; margin: 15px 0;">
             <p style="text-align: justify; font-size: 14px; line-height: 1.6;">
                 Welcome to <b>Foodies Hub!</b> We serve the most delicious and hygienic food.
                 <br><br>
-                📍 <b>Location:</b> <a href="https://maps.google.com/?q=Durgapur,West+Bengal" target="_blank" style="color: #2ed573;">Durgapur, West Bengal</a><br>
+                📍 <b>Location:</b> <a href="https://maps.google.com/?q=Durgapur,West+Bengal" target="_blank"
+                    style="color: #2ed573;">Durgapur, West Bengal</a><br>
                 📞 <b>Contact:</b> +91 98765 43210<br>
                 🕒 <b>Timing:</b> 10:00 AM - 11:00 PM
             </p>
@@ -164,4 +182,5 @@
     <a href="https://wa.me/917384887602" class="whatsapp-btn">💬 Chat</a>
     <script src="script.js"></script>
 </body>
+
 </html>

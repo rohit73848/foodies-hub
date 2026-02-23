@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Foodies Hub 🍔</h1>
+        <div class="header-buttons">
+            <a href="index.html" class="theme-btn" style="text-decoration:none;">🏠 Home</a>
+            <button class="theme-btn" onclick="toggleTheme()">🌓</button>
+        </div>
+    </header>
+
+    <div class="container" style="max-width: 500px; margin-top: 40px;">
+        
+        <div id="login-section" class="admin-form" style="display: none; text-align: center;">
+            <h2 style="color: #ff4757;">Welcome!</h2>
+            <p style="margin: 10px 0; color: #aaa; font-size: 14px;">Please sign in to save your delivery details.</p>
+            <button class="checkout-btn" style="background: #4285F4; margin-top: 15px;" onclick="loginWithGoogle()">🌐 Sign in with Google</button>
+        </div>
+
+        <div id="profile-section" class="admin-form" style="display: none; text-align: center;">
+            <img id="user-dp" src="" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid #2ed573; margin-bottom: 10px;">
+            <h2 id="user-name" style="color: #2ed573;"></h2>
+            <p id="user-email" style="font-size: 13px; color: #aaa; margin-bottom: 20px;"></p>
+            
+            <h4 style="text-align: left; margin-bottom: 5px; color: orange;">Delivery Details:</h4>
+            <input type="tel" id="profPhone" placeholder="Your Phone Number">
+            <textarea id="profAddress" rows="3" placeholder="Your Default Delivery Address"></textarea>
+            
+            <button class="checkout-btn" onclick="saveProfileDetails()">💾 Save Details</button>
+            <button class="checkout-btn" style="background: #ff4757; margin-top: 10px;" onclick="logoutUser()">🚪 Logout</button>
+            <button class="checkout-btn" style="background: #ff4757; margin-top: 10px;" onclick="logoutUser()">🚪 Logout</button>
+            
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 30px 0 15px 0;">
+            <h2 style="color: #2ed573; text-align: left;">🛵 Live Orders</h2>
+            <div id="live-orders-container" style="text-align: left;">
+                </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        window.onload = function () {
+            if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+        };
+    </script>
+</body>
+</html>

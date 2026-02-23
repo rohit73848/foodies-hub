@@ -6,6 +6,7 @@
     <title>Manager Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="features.css">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
@@ -20,7 +21,8 @@
     </header>
 
     <div class="tab-container">
-        <button class="tab-btn active" onclick="showSection('orders')">🔔 Orders</button>
+        <button class="tab-btn active" onclick="showSection('dashboard')">📊 Dashboard</button>
+        <button class="tab-btn" onclick="showSection('orders')">🔔 Orders</button>
         <button class="tab-btn" onclick="showSection('reservations')">🍽️ Bookings</button>
         <button class="tab-btn" onclick="showSection('add')">➕ Add Item</button>
         <button class="tab-btn" onclick="showSection('stock')">📦 Stock</button>
@@ -28,12 +30,33 @@
     </div>
 
     <div class="container">
-        
-        <div id="sec-orders" class="admin-section">
+
+        <div id="sec-dashboard" class="admin-section" style="display: block;">
+            <h2 style="color: #2ed573;">Today's Overview 📈</h2>
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <p>Total Revenue Today</p>
+                    <h3 id="dash-sales" style="color: #2ed573;">₹0</h3>
+                </div>
+                <div class="dash-card">
+                    <p>Total Orders Today</p>
+                    <h3 id="dash-orders" style="color: #ffa502;">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-orders" class="admin-section" style="display: none;">
             <h2 style="color: #2ed573;">Incoming Orders</h2>
             <div class="table-container">
                 <table class="food-table">
-                    <thead><tr><th>ID & Customer</th><th>Items</th><th>Status</th><th>Action</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>ID & Customer</th>
+                            <th>Items</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
                     <tbody id="admin-order-list"></tbody>
                 </table>
             </div>

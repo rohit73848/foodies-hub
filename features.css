@@ -1,0 +1,88 @@
+/* ---- features.css (Version 0.9.1 - Tracking, Ratings, Dashboard & UI Fixes) ---- */
+
+/* 1. Live Order Tracking (Vertical Timeline) */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+    margin-top: 20px;
+    text-align: left;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 5px;
+    bottom: 20px;
+    width: 2px;
+    background: #444;
+}
+.timeline-step {
+    position: relative;
+    margin-bottom: 25px;
+    color: #888;
+}
+.timeline-step::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #222;
+    border: 3px solid #555;
+    z-index: 2;
+}
+.timeline-step.completed { color: #fff; }
+.timeline-step.completed::before { background: #2ed573; border-color: #2ed573; }
+.timeline-step.active { color: #fff; }
+.timeline-step.active::before { background: #ff4757; border-color: #ff4757; box-shadow: 0 0 10px #ff4757; }
+.timeline-step b { font-size: 15px; display: block; }
+.timeline-step small { font-size: 12px; color: #aaa; }
+
+/* 2. Rating Badge (Menu Item) */
+.rating-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 3px 8px;
+    border-radius: 5px;
+    display: inline-flex;
+}
+.rating-badge .stars { color: gold; font-weight: bold; }
+.rating-badge .reviews { color: #aaa; }
+
+/* 3. Admin Dashboard Analytics */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+.dash-card {
+    background: var(--card-bg);
+    padding: 25px 20px;
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.dash-card h3 { font-size: 28px; margin-top: 10px; }
+.dash-card p { color: #aaa; font-size: 14px; font-weight: bold; }
+
+/* Tracking Box in Profile */
+.live-track-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 15px;
+}
+
+/* 🔥 Fix Admin Tabs for Large Screens */
+.tab-container { max-width: 800px !important; }
+.tab-btn { padding: 10px 5px !important; font-size: 13px !important; }
